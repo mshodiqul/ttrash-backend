@@ -1,0 +1,374 @@
+include ./item_field_type.jade
+form.form-horizontal
+	ul.nav.nav-tabs
+		- var classLi1 = type == "tambah" ? 'active' : data.type == "tree" ? "hidden" : "active";
+		- var classLi2 = type == "tambah" ? '' : data.type != "tree" ? "hidden" : "active in";
+		li(class=classLi1)
+			a(data-toggle="tab" href="#table") Table
+		li(class=classLi2)
+			a(data-toggle="tab" href="#tree") Tree
+	div.tab-content
+		div.row
+			div.col-lg-6
+				div.form-group
+					label.col-lg-3.control-label NAME
+					div.col-lg-9
+						- if (type == 'tambah')
+							input.form-control(type = 'text')#name
+						- else
+							input.form-control(type = 'text' value = data.nama)#name
+			div.col-lg-6
+				div.form-group
+					div.col-lg-12
+						label.control-label.col-lg-3 ICON
+						div.col-lg-7
+							div(class="input-group")
+								- if (type == 'tambah')
+									input#icon(data-placement="bottomRight" value="fa-archive" type="text").form-control.icp.icp-auto
+									span(class="input-group-addon")
+								- else 
+									input#icon(data-placement="bottomRight" value = data.icon type="text").form-control.icp.icp-auto
+									span(class="input-group-addon")
+		div.tab-pane.fade.in(class=classLi1)#table
+			div.row
+				div.col-lg-6
+					div.form-group
+						label.col-lg-3.control-label PARENT
+						div.col-lg-9
+							- if (type == 'tambah')
+								select.form-control#parent-item
+									option(value = "") Choose Parent
+									each p in listType
+										option(value=p.id)=p.nama
+							- else 
+								select.form-control#parent-item(data-refs = data.refs)
+									option(value = "") Choose Parent
+									each p in listType
+										- if (p.id == data.parent && data.type != "tree")
+											option(value=p.id selected )=p.nama
+										- else 
+											option(value=p.id)=p.nama
+
+								
+				div.col-lg-6
+					div.form-group
+						label.col-lg-3.control-label Field
+						div.col-lg-7
+							select.form-control#preference
+								option(value = "") Choose Field
+			hr
+			div#list_data
+				div.row.row-title
+					div.col-lg-4
+							label Type
+					div.col-lg-5
+							label Label
+					div.col-lg-1
+							label Multi
+					div.col-lg-1
+							label Visible
+					div.col-lg-1
+							label 
+				div.field-input
+					- if (type == 'tambah')
+						+contentFieldType(type , {})
+					- else 
+						- var itemType = data.itemObject
+						- for (x = 0; x < itemType.length; x++)
+							+contentFieldType(type , itemType[x])
+			div#list_template(style = 'display : none;')
+				div.field-input
+					+contentFieldType('tambah' , {})
+			br
+			div.row
+				div.form-group
+					label.control-label.col-md-3.text-right(style="padding:0") Public Inputable
+					div.col-md-7
+						- var checked = false;
+						if (data)
+							- checked = data.public==true?true:false;
+						input(type="checkbox" checked=checked)#inputable
+			br
+			div.row
+				div.form-group
+					label.control-label.col-md-3.text-right(style="padding:0") Enable Notification
+					div.col-md-7
+						- var checked = false;
+						if (data)
+							- checked = data.notif==true?true:false;
+						input(type="checkbox" checked=checked)#notif
+			div.row
+				div.col-lg-6
+					div.form-group
+						div.col-lg-3
+						- if (type == 'tambah')
+							button.btn.btn-info.simpan-field(style = "margin-right : 10px;" data-original-title='Simpan Field Items' data-placement="bottom" rel="tooltip") Simpan
+						- else 
+							button.btn.btn-info.edit-field(style = "margin-right : 10px;" data-original-title='Simpan Field Items' data-id = data.id data-placement="bottom" rel="tooltip" data-type="table") Simpan
+						button.btn.btn-danger#batal-field(data-original-title='Batal Simapn Field Items' data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") Batal
+						button.btn.btn-default#add-field(data-original-title='Add Field Items' data-placement="bottom" rel="tooltip")
+							i.fa.fa-1x.fa-plus
+
+		div.tab-pane.fade(class=classLi2)#tree
+			div.row
+				div.col-md-12
+					hr
+					div#list_data_tree
+						div.row.row-title
+							div.col-lg-4
+									label Type
+							div.col-lg-5
+									label Label
+							div.col-lg-1
+									label 
+						div.field-input
+							- if (type == 'tambah')
+								+contentFieldType(type , {}, 'tree')
+							- else 
+								- var itemType = data.itemObject
+								- for (x = 0; x < itemType.length; x++)
+									+contentFieldType(type , itemType[x], 'tree')
+					div#list_template_tree(style = 'display : none;')
+						div.field-input
+							+contentFieldType('tambah' , {}, 'tree')
+			div.row
+				div.col-lg-6
+					div.form-group
+						div.col-lg-3
+						- if (type == 'tambah')
+							button.btn.btn-info.simpan-field(style = "margin-right : 10px;" data-original-title='Simpan Field Items' data-placement="bottom" rel="tooltip" data-type="tree") Simpan
+						- else 
+							button.btn.btn-info.edit-field(style = "margin-right : 10px;" data-original-title='Simpan Field Items' data-id = data.id data-placement="bottom" rel="tooltip" data-type="tree") Simpan
+						button.btn.btn-danger#batal-field(data-original-title='Batal Simapn Field Items' data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") Batal
+						button.btn.btn-default#add-field-tree(data-original-title='Add Field Items' data-placement="bottom" rel="tooltip" data-type="tree")
+							i.fa.fa-1x.fa-plus
+
+
+script.
+	pageSetUp();
+
+	$(function (){
+		$('.icp-auto').iconpicker({
+			hideOnSelect: true
+		});
+
+		if ('#{type}' == 'edit') {
+			var refs = $('#parent-item').attr('data-refs');
+			var parent = $('#parent-item').val();
+			var elementField = '<option value = ""> Choose Field </option>';
+			if (parent != undefined && parent != '' ) {
+				$.ajax({
+					url : '/manage/content-type/getFieldParent',
+					type : 'POST',
+					dataType : 'json',
+					data : { value : parent },
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							msg.data.forEach(function (field){
+								if (field.label == refs) {
+									elementField +='<option value = "'+field.label+'" selected>'+field.label+'</option>';
+								} else {
+									elementField +='<option value = "'+field.label+'">'+field.label+'</option>';
+								}
+							});
+							$('select#preference').html(elementField);
+						}
+					}
+				});
+			}
+		}
+
+		$('#parent-item').change(function (e){
+			e.preventDefault();
+			$('div#modal_All div#kosong').html('');
+			var value = $(this).val();
+			var elementField = '<option value = ""> Choose Field </option>';
+			if (value != '') {
+				$.ajax({
+					url : '/manage/content-type/getFieldParent',
+					type : 'POST',
+					dataType : 'json',
+					data : { value : value },
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							console.log(msg.data);
+							msg.data.forEach(function (field){
+								elementField +='<option value = "'+field.label+'">'+field.label+'</option>';
+							});
+							$('select#preference').html(elementField);
+						} else {
+							$('div#modal_All div#kosong').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Parent Item not Found !!!</p>");
+						}
+					}
+				});
+			} else {
+				$('select#preference').html(elementField);
+			}
+		});
+
+		$('#batal-field').click(function (e){
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		function CopyElement (sumber , tujuan) {
+			var html = $(sumber).find('.field-input').html();
+			$(tujuan).append(html);
+		}
+
+		$('#add-field').click(function (e){
+			e.preventDefault();
+			$('#modal_All #kosong').html('');
+			if ($(this).attr("data-type") == "tree") {
+				CopyElement('#list_template_tree' , '#list_data_tree .field-input');
+			}
+			else {
+				CopyElement('#list_template' , '#list_data .field-input');			
+			}
+		});
+		$('#add-field-tree').click(function (e){
+			e.preventDefault();
+			CopyElement('#list_template_tree' , '#list_data_tree .field-input');
+		});
+
+		function GetData (type) {
+			var arr = [];
+
+			var selectornya = type == "tree" ? "#list_data_tree" : "#list_data";
+			$(selectornya + ' .field-input div.row').each(function (i){
+				var multi = $(this).find('input#multi').is(':checked');
+				var label = $(this).find('input.labelfield , select.labelfield').val();
+				var visible =  $(this).find('input#visible').is(':checked');
+				var type =  $(this).find('select#type').val();
+				var options = {};
+				if ($(this).find("select.labelfield")) {
+					var value = $(this).find('select.labelfield option[data-id = "'+label+'"] , input.form-control.labelfield').val();
+					console.log(value);
+					options['value'] = value;
+				}
+				if (label == '' || type == '') {
+					$('div#modal_All div#kosong').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+					status = 'tidak';
+					$('.simpan-field').attr('disabled', false);
+				} else {
+					var objectData = {
+						label : label,
+						multi : multi,
+						visible : visible,
+						type : type
+					}
+					if (options != {}) {
+						objectData.option = options;	
+					}
+					arr.push(objectData);
+					status = 'kirim';
+				}
+			});
+			return { arr : arr , status : status }
+		}
+
+		function KirimData (data , url , selector ) {
+			$.ajax({
+				url : url,
+				type : 'POST',
+				dataType : 'json',
+				data : { data : JSON.stringify(data) },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						//- toastr.success('Items Field Successfull ','',{ timeOut : 1000 });
+						$('#clear').click();
+						$('#modal_All').modal('hide');
+						if (msg.reload == true)
+							location.reload();
+					} else {
+						$('div#modal_All div#kosong').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Items Field Gagal !!!! </p>");
+					}
+					$(selector).attr('disabled', false);
+				}
+			})
+		}
+
+		$('.edit-field').click(function (e){
+			e.preventDefault();
+			$('#modal_All #kosong').html('');
+			var status = '';
+			var nama = $('#name').val();
+			var icon = $('#icon').val();
+			var id = $(this).attr('data-id');
+			$(this).attr('disabled', true);
+			var parent = $('#parent-item').val();
+			var refs = $('#preference').val();
+			var typenya = $(this).attr("data-type");
+			if (typenya == "tree") {
+				var data = GetData("tree");
+			}
+			else {
+				var data = GetData();			
+			}
+			var arr = data.arr;
+			status = data.status;
+			nama = nama.replace(/\s/gi,'_');
+			var kirim = {
+				nama : nama,
+				refs : refs,
+				parent : parent,
+				id : id,
+				icon : icon,
+				item : arr,
+				type : typenya,
+				public : $("#inputable").is(":checked"),
+				notif : $("#notif").is(":checked")
+			}
+			//- console.log(kirim)
+			if (nama == '' || status == 'tidak') {
+				$('div#modal_All div#kosong').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+				status == 'tidak'
+				$('.edit-field').attr('disabled', false);
+			} else {
+				//- console.log(kirim)
+				KirimData(kirim , '/manage/content-type/edit', '.edit-field');
+			}
+		});
+
+		$('.simpan-field').click(function (e){
+			e.preventDefault();
+			$('#modal_All #kosong').html('');
+			var status = '';
+			var nama = $('#name').val();
+			var icon = $('#icon').val();
+			$(this).attr('disabled', true);
+			var typenya = $(this).attr("data-type");
+			if (typenya == "tree") {
+				var data = GetData("tree");
+			}
+			else {
+				var data = GetData();
+			}
+			var parent = $('#parent-item').val();
+			var refs = $('#preference').val();
+			var arr = data.arr;
+			status = data.status;
+			nama = nama.replace(/\s/gi,'_');
+			var kirim = {
+				nama : nama,
+				icon : icon,
+				refs : refs,
+				parent : parent,
+				item : arr,
+				public : $("#inputable").is(":checked"),
+				notif : $("#notif").is(":checked"),
+				type : typenya
+			}
+			//- console.log(kirim);
+			if (nama == '' || status == 'tidak') {
+				$('div#modal_All div#kosong').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+				status == 'tidak'
+				$('.simpan-field').attr('disabled', false);
+			} else {
+				//- console.log(kirim);
+				KirimData(kirim , '/manage/content-type/simpan', '#simpan-field');
+			}
+		})
+
+	});

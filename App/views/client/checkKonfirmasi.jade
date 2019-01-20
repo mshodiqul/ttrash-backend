@@ -1,0 +1,73 @@
+extends layout
+block content
+	div.row
+		div.col-md-6
+			div.box.border-bottom-primary(style = "padding-left : 20px; padding-right : 50px;")
+				h3 Form Konfirmasi Pembayaran
+				br
+				form.form-horizontal
+					div#tempat-pesan
+					div.form-group
+						label.control-label.col-lg-3 Nomer Hp
+						div.col-lg-7
+							input(style = "margin-left: 15px;" type = "text" placeholder = "nomor hp").form-control#nomor
+					div.form-group
+						div.col-lg-offset-3.col-lg-7
+							div.pull-right
+								button.btn.btn-primary#submit Submit
+
+		div.col-md-6
+			div.box.border-bottom-primary
+				table.table.table-responsive.table-striped#hasil-list
+					thead
+						tr
+							th Tanggal
+							th Total Harga
+							th
+					tbody
+
+
+	script.
+		$(function () {
+			$('#submit').click(function (e) {
+				e.preventDefault();
+				var nomor = $('#nomor').val();
+				var selector = $(this);
+				selector.attr('disabled', true);
+				if (nomor == "") {
+					$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data masih belum lengkap</p>');
+					selector.attr('disabled', false);
+				} else {
+					$.ajax({
+						url : "/konfirmasi/cek",
+						type : 'POST',
+						data : { nomor : nomor },
+						beforeSend : function() {
+							$('#tempat-pesan').html('<p class = "alert alert-warning" style = "color : #000;">data sedang di proses </p>');
+						},
+						success : function (msg) {
+							if (msg.status == 200 ) {
+								var elt = "";
+								if (msg.data.length != 0 ) {
+									msg.data.forEach(function (i) {
+										elt += "<tr>";
+										elt += "<td>"+i.tanggal+"</td>";
+										elt += "<td>"+i.total+"</td>";
+										elt += "<td><a target ='_blank' href ='/konfirmasi-pembayaran/"+i._id+"' class = 'btn btn-primary'>BUKA</a></td>";
+									});
+									$('table#hasil-list tbody').html(elt);
+									$('#nomor').val("");
+									$('#tempat-pesan').html("");
+								} else {
+									$('#nomor').val("");
+									$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data transaksi tidak di temukan </p>');
+								}
+							} else {
+								$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data gagal di proses</p>');
+							}
+							selector.attr('disabled', false);
+						}
+					})
+				}
+			})
+		})

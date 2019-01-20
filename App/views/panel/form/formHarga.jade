@@ -1,0 +1,122 @@
+div(class = "progress hidden")
+	div(class = "progress-bar progress-bar-success" width = "30%")
+
+form.form-horizontal#formHarga(method = "POST", action = url enctype = "multipart/form-data")
+	div.form-group
+		label.control-label.col-lg-3 Nama
+		div.col-lg-7
+			- if (type == "tambah")
+				input.form-control#nama(name = "nama")
+			- else 
+				input.form-control#nama(value = data.nama name = "nama")
+	div.form-group
+		label.control-label.col-lg-3 Harga Per Kilo
+		div.col-lg-7
+			- if (type == "tambah")
+				input.form-control#harga(name = "harga")
+			- else 
+				input.form-control#harga(value = data.harga name = "harga")
+	div.form-group
+		label.control-label.col-lg-3 Gambar
+		div.col-lg-7
+			- if (type == "tambah") 
+				input.form-control#thumbnail(accept="image/*" type="file" name="gambar")
+			- else 
+				input(type = "text" name = "idne" value = data._id style = "display : none;").form-control#idne
+				input(type = "text" name = "urlgambar" value = data.gambar style = "display : none;").form-control#urlgambar
+				div.box-img(style="position:relative; width:100px; max-height:75px")
+					div.over-img.smart-form
+						button.btn.btn-info.btn-xs(title="Upload" type="button" onClick = "pilihGambar(this);" style="margin-right:5px;")
+							i.fa.fa-upload
+						input.form-control#thumbnail(accept = "image/*" type = "file" name = "gambar" style = "display :none;")
+					- var gambarnya = "background-image:url('" + data.gambar + "')";
+					div.thumbnail.img(style = gambarnya)
+
+	div.form-group
+		div.col-lg-7.col-lg-offset-3
+			- if (type == "tambah")
+				button.btn.btn-primary#submit(style = "margin-right : 10px;" type = "submit") Simpan
+			- else 
+				button.btn.btn-primary#submit(style = "margin-right : 10px;" data-id = data._id type = "submit") Simpan
+			button.btn.btn-danger#batal Batal
+
+script.
+	pageSetUp();
+
+	function pilihGambar(selector) {
+		$('#thumbnail').click();
+		return false;
+	}
+
+	$(function () {
+
+		$('#thumbnail').change(function (e){
+			e.preventDefault();
+			var tmppath = URL.createObjectURL(event.target.files[0]);
+			var gambarnya = "background-image:url('" + tmppath + "')";
+			$('.thumbnail').attr('style', gambarnya);
+		});
+		
+		$('#batal').click(function (e) {
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		$("#formHarga").submit(function (e){
+			let selector = $("#submit");
+			let type = "#{type}";
+			let nama = $("#nama").val();
+			let harga = $("#harga").val();
+			selector.attr('disabled', true);
+			if (nama == "" || harga ==" ") {
+				selector.attr('disabled', false);
+				$.smallBox({
+					title : "Warning",
+					content : "<i class='fa fa-times'></i> <i> Data Masih Ada Yang Kosong </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} else {
+				$(this).ajaxSubmit({
+					uploadProgress : function(event, position, total, percentComplete) {
+						var percentTotal = percentComplete + "%";
+						$(".progress-bar-success").addClass("active").width(percentTotal);
+					},
+					error: function(xhr) {
+						selector.attr('disabled', false);
+						$(".progress").addClass("hidden");
+						$(".progress-bar-success").removeClass("active").width("0%");
+					},
+					success: function(data) {
+						setTimeout(function() {
+							$(".progress").addClass("hidden");
+							$(".progress-bar-success").removeClass("active").width("0%");
+						}, 200);
+						if (data.status == "sukses") {
+							$('#clear').click();
+							$('#batal').click();
+							$.smallBox({
+								title : "Successfully",
+								content : "<i class='fa fa-clock-o'></i> <i> data berhasil di proses </i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 4000
+							});
+						} else {
+							$.smallBox({
+								title : "Warning",
+								content : "<i class='fa fa-times'></i> <i> "+data.pesan+" </i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						selector.attr('disabled', false);
+					}
+				});
+			}
+			e.preventDefault();
+		});
+	});

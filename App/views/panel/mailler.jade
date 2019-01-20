@@ -1,0 +1,153 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-6 col-lg-6")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-cog")
+				h2 SETTING SMTP
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					br
+					div#prosesSmtp
+					form.form-horizontal
+						div.form-group
+							label.control-label.col-lg-3 Service
+							div.col-lg-7
+								input.form-control#service(type = "text" value= dataEmail && dataEmail.service disabled="disabled")
+						div.form-group
+							label.control-label.col-lg-3 Username
+							div.col-lg-7
+								input.form-control#username(type = "text" value = dataEmail && dataEmail.username disabled="disabled")
+						div.form-group
+							label.control-label.col-lg-3 Password
+							div.col-lg-7
+								input.form-control#password(type = "password" value = dataEmail&&dataEmail.password disabled="disabled")
+						- if (role_group != "dinas")
+							div.form-group
+								div.col-lg-offset-3.col-lg-7
+									button#simpanSmtp.btn.btn-info(data = "edit") Edit
+						
+script.
+	pageSetUp();
+
+	function RemoveElement (selector) {
+		$(selector).closest('div.form-group').remove();
+		return false;
+	}
+
+	$(function () {
+		$('#add-element').click(function (e){
+			e.preventDefault();
+			var elementCopy = $('#elementCopy').html();
+			$('form.form-horizontal#Form-Email').append(elementCopy);
+		});
+
+		$('#simpan-email').click(function (e){
+			e.preventDefault();
+			var dataEmail = []
+			var selector = $(this);
+			selector.attr('disabled',true);
+			var loopData = $('form.form-horizontal#Form-Email div.form-group');
+			loopData.each(function (i){
+				var email = $(this).find('input#email').val();
+				if (email != '' ) {
+					dataEmail.push(email);	
+				}
+			});
+			$.ajax({
+				url : '/setting/mailler/simpan',
+				type : 'POST',
+				dataType : 'json',
+				data : {email : JSON.stringify(dataEmail)},
+				success : function (msg){
+					if (msg.status == 'sukses') {
+						$.smallBox({
+							title : 'Success',
+							content : "<i class='fa fa-clock-o'></i> <i> Email Berhasil di Simpan !!!</i>",
+							color : "#659265",
+							iconSmall : "fa fa-check fa-1x fadeInRight animated",
+							timeout : 1000
+						});
+					} else {
+						$.smallBox({
+							title : "Error ",
+							content : "<i class='fa fa-clock-o'></i> <i> "+ msg.pesan +" </i>",
+							color : "#C46A69",
+							iconSmall : "fa fa-times fa-1x fadeInRight animated",
+							timeout : 1000
+						});
+					}
+					selector.attr('disabled', false);
+				}
+			})
+		});
+
+		$(document).delegate("#simpanSmtp[data='simpan']", "click", function (e) {
+			e.preventDefault();
+			var username = $("#username");
+			var password = $("#password");
+			var service = $('#service');
+			var selector = $(this);
+			selector.attr('disabled', true);
+			if (username.val() == "" || password.val() == "") {
+				selector.attr('disabled', false);
+				$("#prosesSmtp").html("<p class=\'alert alert-warning\'> Data Masih Kosong !!! </p>");
+			} else {
+				$.ajax({
+					url : '/setting/mailler/smtp',
+					type : 'POST',
+					dataType : 'json',
+					data : { username : username.val() , password : password.val() , service : service.val()},
+					beforeSend : function() {
+						$("#prosesSmtp").html("<p class=\'alert alert-warning\'>Loading ....</p>");
+					},
+					success : function (msg) {
+						$('#prosesSmtp').html('');
+						if (msg.status == 'sukses') {
+							$.smallBox({
+								title : 'Success',
+								content : "<i class='fa fa-clock-o'></i> <i> Mailler Has Been Changed</i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+							username.attr("disabled", "disabled");
+							service.attr("disabled", "disabled");
+							password.attr("disabled", "disabled");			
+							$("#simpanSmtp").text("Edit");
+							$("#simpanSmtp").removeAttr("data");
+							$("#simpanSmtp").attr("data","edit");
+						} else {
+							$.smallBox({
+								title : "Error ",
+								content : "<i class='fa fa-clock-o'></i> <i> "+ msg.pesan +" </i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						selector.attr('disabled', false); 
+					}
+				});
+			}
+		});
+
+		$(document).delegate("#simpanSmtp[data='edit']", "click", function (e) {
+			e.preventDefault();
+			var username = $("#username");
+			var password = $("#password");
+			var service = $("#service");
+			username.removeAttr("disabled");
+			password.removeAttr("disabled");
+			service.removeAttr("disabled");
+			username.focus();
+			$("#simpanSmtp").text("Simpan");
+			$("#simpanSmtp").removeAttr("data");
+			$("#simpanSmtp").attr("data","simpan");	
+			return false;
+		});
+	});

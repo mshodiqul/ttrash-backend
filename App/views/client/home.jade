@@ -1,0 +1,95 @@
+extends layout
+block content
+	mixin rupiah(n)
+		- var hg = "Rp. "+ (n/1000).toFixed(3).replace(/(\d)(?=(\d{3})+\.)/g, "$1.");
+		p.harga=hg
+	div.row
+		div.col-md-9.col-lg.col-sm-12
+			div.wrap
+				- if (products.length != 0)
+					div.row
+						each p in products
+							div.col-md-3.col-sm-6.col-xs-6
+								a(href='/item/'+p.id)
+									div.kartu
+										figure
+											- var img = p.images[0].imageUrl
+											img.poster(src= img || '/noposter.gif' , onerror="this.onerror=null;this.src='/noposter.gif';")
+										div.labelbawah
+											p.title=p.title
+											+rupiah(p.harga)
+										div.buttonPlace
+											button.btn.btn-default(style="width:100%")#btn-beli BELI SEKARANG
+					br
+					br
+					br
+					div.row
+						center
+							div.col-md-12.col-lg.col-sm-12
+								ul.pagination(style = "margin : 0 auto; float : none;")
+									- if(currentPage > 1) {
+										li
+											a(href="/page/"+1)
+												i.fa.fa-angle-double-left
+									- }
+
+									- var i = 1;
+									- if(currentPage > 5){
+										- i =+currentPage - 4
+									- }
+
+									- loncatkiri = parseInt(currentPage) -5
+									- loncatkanan = parseInt(currentPage) +5
+
+									- if(i !== 1 ) {
+										li
+											a(href="/page/"+loncatkiri) ...
+									- }
+
+									- for(i; i <= pageCount; i++) {
+										- if(currentPage == i){
+											li.active
+												span=i
+													span.sr-only
+										- } else {
+											li
+												a(href = '/page/'+i,id=i).paging=i
+										- }
+
+										- if(i == (+currentPage +3) ) {
+											li
+												a(href="/page/"+loncatkanan) ...
+										- break
+										- }
+									- }
+
+									- if(currentPage != pageCount) {
+										li
+											a(href='/page/'+pageCount)
+												i.fa.fa-angle-double-right
+									- }
+				- else 
+					center
+						h1 data masih kosong
+		
+		div.col-md-3.col-sm-12.col-xs-12
+			div#sidebar
+				h1.nav-category Category
+				ul.list-item
+					- if (kategori.length != 0 )
+						each k in kategori
+							li.list-sub-item
+								a(href="/kategori/"+k._id.toLowerCase())=k._id
+
+			div#sidebar
+				h1.nav-category Terakhir di beli
+				ul.list-item
+					- if (last_order.length != 0 )
+						each o in last_order
+							li.list-sub-item=o.title
+
+	script.
+
+		$(function () {
+			localStorage.removeItem("cart_item");
+		});

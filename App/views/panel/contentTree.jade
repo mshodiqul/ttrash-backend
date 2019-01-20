@@ -1,0 +1,79 @@
+section#widget-grid(data-idtype = id_type data-type = Type.nama)
+	div.row
+		article.col-xs-12.col-sm-12.col-md-12.col-lg-12
+			div.jarviswidget.jarviswidget-color-darken(data-widget-editbutton="false", data-widget-refresh='10', data-widget-deletebutton='false')
+				header
+					span.widget-icon
+						i.fa.fa-table
+					- var title = Type.nama+' items'
+					h2=title.toUpperCase()
+				div
+					div.jarviswidget-editbox
+
+					div(class='widget-body no-padding')
+						div.col-lg-12(style="padding:10px;background-color:#eee;")
+							a.btn.btn-default(href = "/main#/content/"+Type.nama+"/add" data-original-title= 'Tambah Item '+ type + ' Baru'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+								i.fa.fa-plus
+
+						div.col-lg-12
+							div.tree.smart-form
+								ul
+									mixin parseTree(obj)
+										each o in obj
+											li
+												span
+													i.fa.fa-lg.fa-minus-sign.icon-minus-sign
+													= ' ' + o.title
+												| &nbsp;
+												button.btn.btn-default.btn-xs(data-url = "/main#/content/"+Type.nama+"/edit" onclick="editItem(this)" data-original-title= 'Edit Item '+ o.title  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;" data-id=o.id)
+													i.fa.fa-1x.fa-pencil
+												button.btn.btn-default.btn-xs(data-original-title= 'Hapus Item'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;" onclick="deleteItem(this)" data-id=o.id)
+													i.fa.fa-1x.fa-trash-o
+												ul
+													if (o.child)
+														+parseTree(o.child)
+													//- ul
+													//- 	li
+													//- 		span Child
+									+parseTree(tree)
+script.
+	pageSetUp();
+	var pagefunction = function() {
+		loadScript("/js/plugin/bootstraptree/bootstrap-tree.min.js");
+	};
+	$(function() {
+		pagefunction();
+	})
+
+	function editItem(element) {
+		var url = $(element).attr('data-url');
+		var id = $(element).attr("data-id");
+		window.location.href = url+'/'+id;
+		return false;
+	}
+
+	function deleteItem(element) {
+		$.SmartMessageBox({
+			title : "Warning !!!",
+			content : "Are You Sure ? You Want to Delete This Item",
+			buttons : '[No][Yes]'
+		}, function (ButtonPressed) {
+			if (ButtonPressed === "Yes") {
+				var kirim = {
+					id : [$(element).attr("data-id")]
+				}
+				$.ajax({
+					url : '/content/delete-item',
+					type : 'POST',
+					dataType : 'json',
+					data : {data  : JSON.stringify(kirim) },
+					success : function (msg) {
+						$(element).closest("li").remove();
+					}
+				})
+			} else {
+				$('#clear').click();
+			}
+		});
+		return false;
+	}

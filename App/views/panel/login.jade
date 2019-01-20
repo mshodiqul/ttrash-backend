@@ -1,0 +1,65 @@
+html
+	head
+		meta(name = "viewport" content = "width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=no")
+		title=title
+		//- link(rel = "stylesheet" href = "/css/materialize.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/bootstrap.min.css")
+		link(rel = "stylesheet" href = "/css/custom/login.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/font-awesome.min.css")
+
+	body
+		div.login-page
+			div.form(style = "border-bottom : 2.4px solid #e74c3c")
+				div#tempat-pesan
+				form.login-form
+					input#username(type = "text" placeholder = "Username")
+					input#password(type = "password" placeholder = "Password ")
+					//- label(class = "checkbox-inline" style = "margin-bottom : 10px;").pull-left
+						input#remember(type = "checkbox" name = "checkbox")
+						| Remember
+					button#login Login
+					//- p.message Not registered ? 
+						a(href = "#") Create an account 	
+	
+
+		script(src = "/js/libs/jquery-2.1.1.min.js")
+		script.
+			$(function (){
+				$('.message a').click(function(){
+					$('form').animate({height: "toggle", opacity: "toggle"}, "slow");
+					$('#tempat-pesan').html('');
+				});
+				
+				$('#login').click(function (e){
+					e.preventDefault();
+					$(this).attr('disabled', true);
+					var username = $('#username').val();
+					var password = $('#password').val();
+					var remember = $('#remember').prop('checked');
+					if (username == "" || password == "" ) {
+						$('#login').attr('disabled', false);
+						$('#tempat-pesan').html("<p data-alert class='alert alert-warning'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+					} else {
+						var data = {
+							username : username,
+							password : password,
+						}
+						console.log(data);
+						$.ajax({
+							url : '/user/login',
+							type : 'POST',
+							dataType : 'json',
+							data : data,
+							success : function (msg) {
+								if (msg.status == 'sukses') {
+									$('input').val('');
+									window.location.href = '/main';
+								} else {
+									$('#tempat-pesan').html("<p data-alert class='alert alert-warning'><i class='fa fa-minus-circle'></i> "+msg.pesan+"</p>");
+								}
+								$('#login').attr('disabled', false);
+							}
+						})
+					}
+				})
+			})

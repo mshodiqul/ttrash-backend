@@ -1,0 +1,116 @@
+extends layout
+block content
+	div.row
+		div.col-md-12
+			div.box.border-bottom-primary
+				h3 Cart
+				table.table.table-responsive.table-striped
+					thead
+						tr
+							//- th #
+							th Name
+							th.hidden-xs Price
+							th Qty
+							th Total
+							th
+					tbody#table-cart
+					tbody#table-footer
+				div.clearfix
+	
+	div.row
+		div.col-md-12
+			div.box.border-bottom-primary(style = "padding-left : 20px; padding-right : 50px;")
+				h3 Form Pembayaran
+				br
+				form.form-horizontal
+					div#tempat-pesan
+					div.form-group
+						label.control-label.col-lg-1 Nama Lengkap
+						div.col-lg-3
+							input(style = "margin-left: 15px;" type = "text").form-control#nama
+					div.form-group
+						label.control-label.col-lg-1 Nomer Telpon
+						div.col-lg-3
+							input(style = "margin-left: 15px;" type = "number").form-control#telp
+					div.form-group
+						label.control-label.col-lg-1 Email
+						div.col-lg-3
+							input(style = "margin-left: 15px;" type = "text").form-control#email
+					div.form-group
+						label.control-label.col-lg-1 Alamat Lengkap
+						div.col-lg-3
+							textarea.form-control(cols = "5" rows = "5" style = "margin-left: 15px;")#alamat
+							//- input(style = "margin-left: 15px;" type = "text").form-control#email
+					div.form-group
+						div.col-lg-4
+							div.pull-right
+								button.btn.btn-primary#btnCheckout
+									span Selesai
+
+	script.
+		var urlSite = "item";
+		$(function() {
+
+			$('#btnCheckout').click(function (e) {
+				e.preventDefault();
+				$('#tempat-pesan').html("");
+				var nama = $('#nama').val();
+				var telp = $('#telp').val();
+				var alamat = $('#alamat').val();
+				var email = $('#email').val();
+				var selector = $(this);
+				selector.attr('disabled', true);
+				if (nama == "" || telp == "" || email == "" || alamat == "") {
+					$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data masih belum lengkap</p>');
+					selector.attr('disabled', false);
+				} else {
+					getKeranjang(function (hasil) {
+						var data = {
+							nama : nama,
+							telp :telp,
+							alamat : alamat,
+							email : email,
+							title : hasil[0].title,
+							price : hasil[0].price,
+							jumlah : hasil[0].jumlah,
+							totalHarga : hasil[0].totalHarga,
+							images : hasil[0].images
+						}
+						$.ajax({
+							url : "/checkout/proses",
+							type : 'POST',
+							data : data,
+							beforeSend : function() {
+								console.log("Loading");
+								$('#tempat-pesan').html('<p class = "alert alert-warning" style = "color : #000;">data sedang di proses </p>');
+							},
+							success : function (msg) {
+								if (msg.status == 200 ) {
+									$('#tempat-pesan').html('<p class = "alert alert-success" style = "color : #000;">order sukses</p>');
+									window.location.href= "/konfirmasi-pembayaran/"+msg.code;
+								} else {
+									$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data gagal di proses</p>');
+								}
+								selector.attr('disabled', false);
+							}
+						})
+					});
+				}
+			});
+
+			getKeranjang(function (hasil) {
+				var selector = $("#table-cart");
+				var totalHarga = 0;
+				if (hasil.length == 0) {
+					$("#btnCheckout").hide();
+					$("#btnRemove").hide();
+				}
+				hasil.forEach(function (doc, i) {
+					var element = "<tr id=" + doc.id + "><td>" + doc.title + "</td><td class=\"hidden-xs\" data-harga=" + doc.price + ">" + rupiah(doc.price) + "</td><td>" + doc.jumlah + "</td><td data-total=" + doc.totalHarga + ">" + rupiah(doc.totalHarga) + "</td></tr>";
+					totalHarga += doc.totalHarga;
+					selector.append(element);
+				})
+				var elementFooter = "<tr><td class=\"text-center\" colspan=\"6\">Total Price <b>" + rupiah(totalHarga) + "</b></td></tr>";
+				$("#table-footer").append(elementFooter);
+			});
+		});

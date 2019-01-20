@@ -1,0 +1,37 @@
+mixin rupiah(n)
+	- var hg = "Rp. "+ (n/1000).toFixed(3).replace(/(\d)(?=(\d{3})+\.)/g, "$1.");
+	//- p.harga=hg
+	input.form-control(type = "text" readonly value = hg)
+form.form-horizontal
+	div.form-group
+		label.control-label.col-lg-3 No Order
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data._id)
+	div.form-group
+		label.control-label.col-lg-3 Nama Lengkap
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data.nama)
+	div.form-group
+		label.control-label.col-lg-3 Telpon
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data.telp)
+	div.form-group
+		label.control-label.col-lg-3 Email
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data.email)
+	div.form-group
+		label.control-label.col-lg-3 Alamat
+		div.col-lg-7
+			textarea.form-control(readonly cols = "5" rows = "5")=data.alamat
+	div.form-group
+		label.control-label.col-lg-3 Pesanan
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data.title)
+	div.form-group
+		label.control-label.col-lg-3 Jumlah
+		div.col-lg-7
+			input.form-control(type = "text" readonly value = data.jumlah)
+	div.form-group
+		label.control-label.col-lg-3 Total Harga
+		div.col-lg-7
+			+rupiah(data.totalHarga)

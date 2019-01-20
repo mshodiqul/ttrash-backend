@@ -1,0 +1,71 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 TRANSAKSI SAMPAH
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'},{title : 'Hapus Data' ,onclick : 'DataTableDelete("/transaksi/sampah/delete")', kelas : 'fa-trash-o'}]
+						+component(data)
+						div.col-lg-3.col-sm-3.col-xs-4
+							select#filter.form-control
+								option(value="all") -- Pilih Status --
+								option(value = "") ALL
+								option(value = "N") Belum di Hitung
+								option(value = "Y") Sudah di Hitung
+					table(id = "table-transaksi" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th
+								th ID Order
+								th Nama
+								th Nomer Hp
+								th ID Driver
+								th Nama Driver
+								th Status
+								th Point
+								th 
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/transaksi/sampah/dataTable/all';
+
+		var tablegroup = dataTable('#table-transaksi',dataTableURL,dataTableWidth ,{ selectable : [1] });
+		
+		function refresh(){
+			tablegroup.fnDraw();
+			selected = [];
+		}
+
+		$('#filter').change(function (e){
+			e.preventDefault();
+			var isi = $(this).val();
+			var urlTable = '';
+			if (isi == '') {
+				urlTable = '/transaksi/sampah/dataTable/all';
+			} else {
+				urlTable = '/transaksi/sampah/dataTable/'+isi;
+			}
+			tablegroup = dataTable('#table-transaksi',urlTable,dataTableWidth ,{ selectable : [1]});
+		});
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+	});

@@ -1,0 +1,88 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-user")
+				h2 USER MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ID : 'dataTable-add' ,  onclick : 'DataTableAdd("/manage/user/add","Tambah User Baru")' , title : 'Create New User' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'},{ID : 'user-edit' , onclick : 'DataTableEdit("/manage/user/edit","Edit User")' , title : 'Edit User' , kelas : 'fa-pencil'} , {ID : 'user-delete' , url : '/manage/user/delete' , onclick : 'DataTableDelete("/manage/user/delete")', title : 'Delete User' , kelas : 'fa-trash-o'}]
+						+component(data)
+						div.col-lg-3.col-sm-3.col-xs-4
+							select#group.form-control
+								option(value="all") Pilih
+								each g in group
+									option(value=g._id)=g._id
+						- if (role_group != "admin")
+							div.col-lg-3.col-sm-3.col-xs-4
+								select#bankSampah.form-control
+									option(value="all") Pilih
+									each bs in bankSampah
+										option(value=bs._id)=bs.nama
+					table(id = "table-user" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Name
+								th Username
+								th(data-hide = 'phone') Email
+								th(data-hide = 'phone,tablet') Created_at
+								th(data-hide = 'phone,tablet ') Updated_at
+
+script.
+	pageSetUp();
+	var selected = [];
+
+	$(function (){
+		let role_group = "#{role_group}";
+		let id_bankSampah = "#{id_bankSampah}";
+		var dataTableWidth = [{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/user/dataTable/all/all';
+
+		var tableuser = dataTable('#table-user',dataTableURL,dataTableWidth ,{ selectable : [1,2,3,4,5] });
+		
+		function refresh(){
+			tableuser.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-user');
+
+		$('#group').change(function (e) {
+			e.preventDefault();
+			var isi = $(this).val();
+			let bankSampah = "";
+			if (role_group == "admin") {
+				bankSampah = id_bankSampah;
+			} else {
+				bankSampah = $('#bankSampah').val();
+			}
+			var url = "/manage/user/dataTable/"+isi+"/"+bankSampah;
+
+			tableuser = dataTable('#table-user',url,dataTableWidth ,{ selectable : [1,2,3,4,5] });
+		});
+
+		$('#bankSampah').change(function (e) {
+			e.preventDefault();
+			let group = $('#group').val();
+			var isi = $(this).val();
+			var url = '/manage/user/dataTable/'+group+'/'+isi;
+			tableuser = dataTable('#table-user',url,dataTableWidth ,{ selectable : [1,2,3,4,5] });
+		});
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+
+	});

@@ -1,0 +1,36 @@
+style.
+	#tempat-table {
+		overflow: scroll;
+		height: 450px;
+	}
+
+div.row
+	div#tempat-table
+		table.table.table-bordered
+			thead
+				tr
+					th NAME
+					th ACTION
+			tbody
+				each d in data
+					tr
+						td=d.name
+						td(style = "width: 25px;")
+							center
+								a(onclick = "BackUpData(\""+d.name+"\",this)").btn.btn-xs.btn-primary 
+									i.fa.fa-floppy-o
+script.
+	pageSetUp();
+	
+	function BackUpData(name , selector) {
+		$(selector).attr('disabled', true);
+		$.ajax({
+			url : '/manage/backup',
+			type : 'POST',
+			dataType : 'json',
+			data : { nama : name },
+			success : function (msg) {
+				console.log(msg);
+			}
+		});
+	}

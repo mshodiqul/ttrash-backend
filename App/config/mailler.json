@@ -1,0 +1,18 @@
+{
+	"dev" : {
+		"service" : "gmail",
+		"auth" : {
+			"user" : "steamhdmovies@gmail.com",
+			"pass" : "kepitingsaustiram"
+		},
+		"status" : true
+	},
+	"production" : {
+		"service" : "gmail",
+		"auth" : {
+			"user" : "steamhdmovies@gmail.com",
+			"pass" : "kepitingsaustiram"
+		},
+		"status" : true
+	}
+}

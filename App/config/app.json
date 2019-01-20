@@ -1,0 +1,16 @@
+{
+	"dev" : {
+		"app" : {
+			"host" : "::",
+			"port" : 9090,
+			"logger" : true
+		}
+	},
+	"production" : {
+		"app" : {
+			"host" : "::",
+			"port" : 9000,
+			"logger" : true
+		}
+	}
+}

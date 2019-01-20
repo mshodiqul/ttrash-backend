@@ -1,0 +1,669 @@
+include ./item_field_type.jade
+link(href="/plugins/Ghost-Markdown-Editor/ghostdown.css" media="all" rel="stylesheet")
+script(src="/plugins/Ghost-Markdown-Editor/ghostdown.js")
+style.
+	#entry-markdown {
+		border:2px dotted#333 #important;
+	}
+	.ui-autocomplete {
+		position: absolute;
+	}
+div#tempat-upload(style = 'display : none;' data-idtype = id_type data-type = type data-field = id_field data-idparent = data.parent data-refs = data.refs)
+	div(id = "progress" class = "progress")
+		div(class = "progress-bar progress-bar-success")
+	div(id = "files" class = "files")
+		i.fa.fa.times
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+			div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+				header
+					span(class = "widget-icon")
+						i(class = "fa fa-user")
+					h2 CONTENT MANAGEMENT
+
+				div
+					div(class = "jarviswidget-editbox")
+
+					div(class = "widget-body no-padding")
+						br
+						div#tempat-pesan
+						div.row
+							div.col-lg-12
+								div.form-group
+									label.control-label.col-lg-1.text-right Title
+									div.col-lg-6
+										- if (status == 'tambah')
+											input.form-control(type = 'text')#title
+										- else
+											input.form-control(value = result.title type = 'text')#title
+							if (dataType == "tree")
+								div.col-lg-12
+									div.form-group
+										label.control-label.col-lg-1.text-right Parent
+										div.col-lg-6
+											select#parent.form-control
+												option(value="0") --------- PILIH PARENT ---------
+												if (status != "edit")
+													each o in dataTree
+														option(value=o.id)= o.title
+												else
+													each o in dataTree
+														- var checked = o.id == result.parent ? true : false;
+														if (o.id != result.id)
+															option(value=o.id selected=checked)= o.title
+						- var attr = data.itemObject
+						- for (i = 0; i < attr.length; i++)
+							- var multi = attr[i].multi
+							- var label = attr[i].label
+							- var mix = 'itemField_'+attr[i].type
+							div#list_data(style = "margin-top : 10px !important; margin-bottom : 10px !important")
+								- if (status == 'tambah')
+									- if (attr[i].type == 'label_tag')
+										+#{mix}(status , multi , label , attr[i].option.value)
+									-else
+										+#{mix}(status , multi , label )
+								- else 									
+									- if (attr[i].type == 'string' || attr[i].type == 'text')
+										- var arr_string = []
+										- var cek = Array.isArray(result[attr[i].label])
+										- if (cek == false )
+											+#{mix}(status , multi , label , result[attr[i].label] )
+										- else 
+											+#{mix}(status ,multi , label , result[attr[i].label])
+									- else if (attr[i].type == 'geometry-point')
+										+#{mix}(status ,multi , label , result[attr[i].label]['coordinates'])
+									- else if (attr[i].type == 'label_tag')
+										- var tags = result['tag'][label]
+										+#{mix}(status , multi , label , attr[i].option.value , tags)
+									- else if (attr[i].type == 'imdb')
+										+#{mix}(status , multi , label , { imdb : result.imdb})
+									- else
+										+#{mix}(status , multi , label , result[attr[i].type])
+									
+							div#list_template(style = "display : none;")
+								- if (attr[i].type == 'label_tag')
+									+#{mix}(status , multi , label , attr[i].option.value)
+								- else if (attr[i].type == 'editor')
+									+#{mix}(status , multi , label , attr[i].option.value)
+								- else
+									p(data-label = label)=status
+									+#{mix}(status , multi , label)
+						- if ( (data.parent != undefined && data.parent != '' ) && id_field == undefined || id_field == '')
+							br
+							div.row
+								div.col-lg-12
+									div.form-group
+										label.control-label.col-lg-1.text-right Parent
+										div.col-lg-6
+											input.form-control#searchNya(type = 'text' data-idparent = data.parent data-refs = data.refs)
+											div#tempateData
+						//- br
+						//- div.row
+							div.col-lg-12
+								div.form-group
+									label.control-label.col-lg-1.text-right Sticky
+									div.col-lg-6
+										if (result)
+											if (result.sticky == true)
+												input(type="checkbox" checked="checked")#sticky
+											else
+												input(type="checkbox")#sticky
+										else
+											input(type="checkbox")#sticky
+						div.row
+							div.col-lg-1
+							div.col-lg-6
+								div.form-group
+									- if (status == 'tambah')
+										button.btn.btn-info(style = "margin-right : 10px;")#simpanItems Simpan
+									- else
+										button.btn.btn-info(style = "margin-right : 10px;" data-id = result.id )#editItems Simpan
+									button.btn.btn-danger(style = "margin-right : 10px;")#batalSimpan Batal
+									img(src= '/spinner.gif' style = "display:none;")#loading
+
+script.
+	pageSetUp();
+
+	$('.add-image').click(function (e){
+		e.preventDefault();
+		$("#plusImage").trigger("click");
+	});
+
+	function GetSubLabel(label, cb) {
+		$.ajax({
+			url : '/manage/label-tag/GetSubLabel',
+			type : 'POST',
+			dataType : 'json',
+			data : { label : label },
+			success : function (msg) {
+				cb (null, msg);
+			}
+		});
+	}
+
+	function HapusItem (selector , target) {
+		$(selector).closest(target).remove();
+	}
+
+	function CopyElement(sumber , tujuan, file) {
+		var files = file || false
+		var html = $(sumber).html();
+		$(tujuan).append(html);
+	}
+
+	function RemoveKategori(selector) {
+		$(selector).parent().remove();
+		return false;
+	}
+
+	$(function (){
+		var id_field = '#{id_field}';
+		var type = $('div#tempat-upload').attr('data-type');
+		var id_type = $('div#tempat-upload').attr('data-idtype');
+		var type = $('div#tempat-upload').attr('data-type');
+		var field_refs = $('#searchNya').attr('data-refs');
+		var type_parent = $('#searchNya').attr('data-idparent');
+
+		//- autocomplete data parent
+		$("#searchNya").autocomplete({
+			minLength : 0,
+			source : function(req, res) {
+				$.get("/restAutoComplete", {q : req.term , id_type : type_parent , refs : field_refs }, function (data) {
+					if (data != null ) {
+						res( $.map( data, function (item) {
+							return {
+								label: item.title,
+								value: item[field_refs]
+							}
+						}));
+					} else {
+						return {
+							label : '',
+							value : ''
+						}
+					}
+				});
+			},
+			select : function(event, ui) {
+				$("#searchNya").val(ui.item.value);
+			},
+			appendTo : "#tempateData"
+		});
+
+		var selector = '#list_data div.tempat_labeltag #box-labelTag ';
+		var data_list = $(selector).find('div#box-SubLabel');
+		data_list.each(function (i){
+			var value = $(this).find('select.tambahan').attr('data-value');
+			var selected = $('select.tambahan[data-value= "'+value+'"]#select-label').attr('data-isi');
+			var element = "<option> Choose Label </option>";
+			if (selected != undefined) {
+				selected = JSON.parse(selected);
+				selected.forEach(function (i){
+					element += '<option selected value = "'+i+'">'+i+'</option>';
+				});
+				$('select.tambahan[data-value= "'+value+'"]#select-label').html(element);
+			}
+			$('select.tambahan[data-value= "'+value+'"]#select-label').selectize({
+				valueField: 'title',
+				labelField: 'title',
+				searchField: 'title',
+				options: [],
+				create: true,
+				load: function(query, callback) {
+					if (!query.length) return callback();
+					$.ajax({
+						url: '/manage/label-tag/GetSubLabel',
+						type: 'POST',
+						dataType: 'json',
+						data: {
+							q : query,
+							page_limit: 10,
+							label : value
+						},
+						error: function() {
+							callback();
+						},
+						success: function(res) {
+							callback(res);
+						}
+					});
+				}
+			});
+		});
+		
+		$('#batalSimpan').click(function (e){
+			e.preventDefault();
+			if (id_field == undefined && id_field == '') {
+				window.location = '/main#/content/'+type;
+			} else {
+				window.location = '/main#/content/'+type+'/'+id_field;
+			}
+		})
+
+		function SendData (data , url , selector) {
+			$.ajax({
+				url : url,
+				type : 'POST',
+				dataType : 'json',
+				data : { data : JSON.stringify(data) },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						if (id_field == undefined && id_field == '') {
+							window.location = '/main#/content/'+type;
+						} else {
+							window.location = '/main#/content/'+type+'/'+id_field;
+						}
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger"> the data item in the store fails !!! </p>')
+					}
+					$(selector).attr('disabled', false);
+				}
+			});
+		}
+
+		function FormValidasi () {
+			var status_list = [];
+			if ($('#list_data .tempat_labeltag').find('#box-labelTag').length != 0 ) {
+				$('#list_data .tempat_labeltag').find('div#box-labelTag.row').each(function (x){
+					var label = $(this).find('label.control-label').text();
+					var value = $('#list_data .tempat_labeltag').find('select.tambahan[data-label="'+label+'"]').val();
+					if ( label != '' || value != null) {
+						status_list.push(true);
+					}  else {
+						status_list.push(false);
+					}
+				});
+			}
+	
+			if ($('#list_data .tempat_select').find('select#select').length != 0 ) {
+				$('#list_data .tempat_select div.row').each(function (i){
+					var text = $(this).find('select#select').val();
+					var label =  $(this).find('label.control-label').text();
+					if (text == '') {
+						status_list.push(false);
+					} else {
+						status_list.push(true);
+					}
+				});
+			}
+
+			if ($('#list_data .tempat_text').find('textarea#text').length != 0 ) {
+				$('#list_data .tempat_text div.row').each(function (i){
+					var text = $(this).find('textarea#text').val();
+					var label =  $(this).find('label.control-label').text();
+					if (text == '') {
+						status_list.push(false);
+					} else {
+						status_list.push(true);
+					}
+				});
+			}
+
+			if ($('#list_data .tempat_string').find('input#string').length != 0 ) {
+				$('#list_data .tempat_string div.row').each(function (i){
+					var string = $(this).find('input#string').val();
+					var label =  $(this).find('label.control-label').text();
+					if (string == '') {
+						status_list.push(false);
+					} else {
+						status_list.push(true);
+					}
+				});
+			}
+
+			var status = $.inArray(false , status_list);
+			return status;
+		}
+
+		$('#editItems').click(function (e){
+			e.preventDefault();
+			$(this).attr('disabled',true);
+			$('div#tempat-pesan').html('');
+			var status = 'kirim';
+			var id = $(this).attr('data-id');
+			var arr_string = [];
+			var arr_text = [];
+			var arr_image = [];
+			var kategories = [];
+			var select = $('select#select').val();
+			var arr_tag = {};
+			var title = $('#title').val().replace(/[^\w\s]/gi, ' ');
+			//- var sticky = $("#sticky").is(":checked");
+			var item_parent = '';
+			var parent = $('#parent').val();
+			if ('#{id_field}' != undefined && id_field != '') {
+				item_parent = '#{id_field}';
+			} else {
+				item_parent = $('#searchNya').val();
+			}
+			var kirim = {
+				id : id,
+				item_parent : item_parent,
+				title :title,
+				parent : parent,
+				select : select,
+				kategori : [select]
+				//- sticky : sticky
+			};
+
+			if ($('#list_data .tempat_imdb').find('input#imdbID').val() != undefined) {
+				var imdb =  $('#list_data .tempat_imdb').find('input#imdbID').val();
+				var obj_imdb = $('#list_data .tempat_imdb').find('input#imdbID').attr('data-obj');
+				kirim.imdb = imdb;
+			}
+
+			if ($('#list_data .tempat_labeltag').find('#box-labelTag').length != 0 ) {
+				$('#list_data .tempat_labeltag').find('div#box-labelTag.row').each(function (x){
+					var label = $(this).find('label.control-label').text();
+					var value = $('#list_data .tempat_labeltag').find('select.tambahan[data-label="'+label.toLowerCase()+'"]').val();
+					if (value != null && label != '') {
+						var arr_label = [];
+						value.forEach(function (l){
+						 	l = $.trim(l);
+						 	l = l.replace(/\s/gi , '-');
+							arr_label.push(l)
+						 });
+						arr_tag[label] = arr_label;
+						kategories = arr_label;
+					}  else {
+						status = 'tidak';
+					}
+				});
+				//- kirim.kategori = kategories;
+				kirim.tag = arr_tag;
+			}
+
+			if ($('#list_data .tempat_text').find('textarea#text').length != 0 ) {
+				$('#list_data .tempat_text div.row').each(function (i){
+					var text = $(this).find('textarea#text').val();
+					var label =  $(this).find('label.control-label').text();
+					if (text == '') {
+						$('#loading').hide();
+						status = 'tidak';
+						$('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_text.push({
+							label : label.replace(/[^a-zA-Z0-9]/g, ""),
+							value : text
+						});
+					}
+				});
+
+				var groups = _.groupBy(arr_text, function (item) {
+					return [item.label].sort();
+				});
+
+				var duplicates = [],singles = [];
+				_.each(groups, function(group) {
+					if (group.length > 1) {
+						kirim[group[0].label] = group
+					} else {
+						kirim[group[0].label] = group[0].value
+					}
+				});
+
+			}
+
+			if ($('#list_data .tempat_string').find('input#string').length != 0 ) {
+				$('#list_data .tempat_string div.row').each(function (i){
+					var string = $(this).find('input#string').val();
+					var label =  $(this).find('label.control-label').text();
+					if (string == '') {
+						status = 'tidak';
+						$('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_string.push({
+							label : label.replace(/[^a-zA-Z0-9]/g, ""),
+							value : string
+						});
+					}
+				});
+				var groups = _.groupBy(arr_string, function (item) {
+					return [item.label].sort();
+				});
+
+				var duplicates = [],singles = [];
+				_.each(groups, function(group) {
+					if (group.length > 1) {
+						kirim[group[0].label] = group
+					} else {
+						kirim[group[0].label] = group[0].value
+					}
+				});
+			}
+
+			if ($('#list_data .tempat_geometry-point').find('input.latitude').length != 0 ) {
+				$("#list_data .tempat_geometry-point div.row").each(function(i) {
+					var label =  $(this).find('label.control-label').text();
+					var latitude = $(this).find("input.latitude").val();
+					var longitude = $(this).find("input.longitude").val();
+					var object = {
+						type : "Point",
+						coordinates : [
+							parseFloat(longitude),
+							parseFloat(latitude)
+						]
+					}
+					kirim[label] = object;
+				})
+			}
+
+			if ($('#list_data .tempat_image').find('div#box-img').length != 0) {
+				$('#list_data .tempat_image div#box-img').each(function (i){
+					var imageUrl = $(this).find('input.image').attr('data-file');
+					//- console.log(imageUrl);
+					if (imageUrl == undefined) {
+						//- $('#loading').hide();
+						//- $('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_image.push({
+							imageUrl : imageUrl,
+							poster : eval($(this).find('.img').attr("data-poster")) || false,
+						});
+					}
+				});
+				kirim.images = arr_image
+			} else {
+				kirim.images = arr_image
+			}
+
+			if ($("#list_data .editor").find("textarea#entry-markdown").length != 0) {
+				var editor = {};
+
+				editor = {
+					value : window.editor.getValue(),
+					content : $(".rendered-markdown").html()
+				}
+				status = 'kirim';
+				kirim.editor = editor;
+			}
+
+			console.log(kirim);
+			var cek = FormValidasi();
+			if (title == '' ||  cek != -1) {
+				$('div#tempat-pesan').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+				$('#editItems').attr('disabled',false);
+				status = 'tidak';
+			} else {
+				SendData(kirim , '/content/editItem', '#editItems');
+			}
+		})
+
+		$('#simpanItems').click(function (e){
+			e.preventDefault();
+			$(this).attr('disabled',true);
+			$('div#tempat-pesan').html('');
+			var status = 'kirim';
+			var arr_string = [];
+			var arr_text = [];
+			var arr_tag = {};
+			var arr_image = [];
+			var select = $('select#select').val();
+			var kategories = [];
+			var title = $('#title').val().replace(/[^\w\s]/gi, ' ');
+			var parent = $("#parent").val();
+			//- var sticky = $("#sticky").is(":checked");
+			var item_parent = '';
+			//- console.log('#{id_field}')
+			if ('#{id_field}' != undefined && '#{id_field}' != '') {
+				item_parent = '#{id_field}';
+			} else {
+				item_parent = $('#searchNya').val();
+			}
+			var kirim = {
+				title :title,
+				id_type : id_type,
+				item_parent : item_parent,
+				type : type,
+				parent : parent,
+				select : select,
+				kategori : [select]
+			};
+
+			if ($('#list_data .tempat_imdb').find('input#imdbID').val() != undefined) {
+				var imdb =  $('#list_data .tempat_imdb').find('input#imdbID').val();
+				var obj_imdb = $('#list_data .tempat_imdb').find('input#imdbID').attr('data-obj');
+				kirim.imdb = imdb;
+			}
+
+			if ($('#list_data .tempat_labeltag').find('#box-labelTag').length != 0 ) {
+				$('#list_data .tempat_labeltag').find('div#box-labelTag.row').each(function (x){
+					var label = $(this).find('label.control-label').text();
+					var value = $('#list_data .tempat_labeltag').find('select.tambahan[data-label="'+label.toLowerCase()+'"]').val();
+					if ( label != '' && value != null ) {
+						 var arr_label = [];
+						 value.forEach(function (l){
+						 	l = $.trim(l);
+						 	l = l.replace(/\s/gi , '-');
+							arr_label.push(l)
+						 });
+						 kategories = arr_label;
+						arr_tag[label] = arr_label;
+					}  else {
+						status = 'tidak';
+					}
+				});
+				kirim.tag = arr_tag;
+				//- kirim.kategori = kategories;
+			}
+
+			if ($('#list_data .tempat_text').find('textarea#text').length != 0 ) {
+				$('#list_data .tempat_text div.row').each(function (i){
+					var text = $(this).find('textarea#text').val();
+					var label =  $(this).find('label.control-label').text();
+					if (text == '') {
+						$('#loading').hide();
+						status = 'tidak';
+						$('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_text.push({
+							label : label.replace(/[^a-zA-Z0-9]/g, ""),
+							value : text
+						});
+					}
+				});
+
+				var groups = _.groupBy(arr_text, function (item) {
+					return [item.label].sort();
+				});
+
+				var duplicates = [],singles = [];
+				_.each(groups, function(group) {
+					if (group.length > 1) {
+						kirim[group[0].label] = group
+					} else {
+						kirim[group[0].label] = group[0].value
+					}
+				});
+
+			}
+
+			if ($('#list_data .tempat_string').find('input#string').length != 0 ) {
+				$('#list_data .tempat_string div.row').each(function (i){
+					var string = $(this).find('input#string').val();
+					var label =  $(this).find('label.control-label').text();
+					if (string == '') {
+						$('#loading').hide();
+						status = 'tidak';
+						$('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_string.push({
+							label : label.replace(/[^a-zA-Z0-9]/g, ""),
+							value : string
+						});
+					}
+				});
+				var groups = _.groupBy(arr_string, function (item) {
+					return [item.label].sort();
+				});
+
+				var duplicates = [],singles = [];
+				_.each(groups, function(group) {
+					if (group.length > 1) {
+						kirim[group[0].label] = group
+					} else {
+						kirim[group[0].label] = group[0].value
+					}
+				});
+			}
+
+			if ($('#list_data .tempat_geometry-point').find('input.latitude').length != 0 ) {
+				$("#list_data .tempat_geometry-point div.row").each(function(i) {
+					var label =  $(this).find('label.control-label').text();
+					var latitude = $(this).find("input.latitude").val();
+					var longitude = $(this).find("input.longitude").val();
+					var object = {
+						type : "Point",
+						coordinates : [
+							parseFloat(longitude),
+							parseFloat(latitude)
+						]
+					}
+					kirim[label] = object;
+				})
+			}
+
+			if ($('#list_data .tempat_image').find('div#box-img').length != 0) {
+				$('#list_data .tempat_image div#box-img').each(function (i){
+					var imageUrl = $(this).find('input.image').attr('data-file');
+					//- console.log(imageUrl);
+					if (imageUrl == undefined) {
+						//- $('#loading').hide();
+						//- $('#simpanItems').attr('disabled',false);
+					} else {
+						status = 'kirim';
+						arr_image.push({
+							imageUrl : imageUrl,
+							poster : eval($(this).find('.img').attr("data-poster")) || false,
+						});
+					}
+				});
+				kirim.images = arr_image
+			}
+
+			if ($("#list_data .editor").find("textarea#entry-markdown").length != 0) {
+				var editor = {};
+
+				editor = {
+					value : window.editor.getValue(),
+					content : $(".rendered-markdown").html()
+				}
+				status = 'kirim';
+				kirim.editor = editor;
+			}
+			var cek = FormValidasi();
+			console.log(kirim);
+			if (title == '' || status == 'tidak' || cek != -1 ) {
+				$('div#tempat-pesan').html("<p class='alert alert-danger'><i class='fa fa-minus-circle'></i> Data Masih Kosong !!! </p>");
+				$('#simpanItems').attr('disabled', false);
+				status = 'tidak';
+			} else {
+				SendData(kirim , '/content/simpanItem', '#simpanItems');
+			}
+		});
+	})

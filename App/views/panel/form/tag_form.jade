@@ -1,0 +1,101 @@
+form.form-horizontal
+	div#tempat-pesan
+	div.form-group
+		label.control-label.col-lg-3 Label
+		div.col-lg-7
+			- if (type == 'tambah')
+				input.form-control(autocomplete = 'off' list = "list-label")#label
+				datalist#list-label
+					each list in data
+						option(value = list)
+			- else 
+				input.form-control(autocomplete = 'off' value = result.label list = "list-label")#label
+				datalist(id="list-label")
+					each list in data
+						option(value = list)= list
+	div.form-group
+		label.control-label.col-lg-3 Tag
+		div.col-lg-7
+			- if (type == 'tambah')
+				input.form-control#tag(type = 'text')
+			- else 
+				input.form-control#tag(type = 'text' value = result.tag.replace(/[^\w\s]/gi, ' '))
+	div.form-group
+		label.control-label.col-lg-3 Parent
+		div.col-lg-7
+			select.form-control( id = "parent")!=element
+	div.form-group
+		div.col-lg-offset-2.col-lg-7
+			- if (type == 'tambah')
+				button.btn.btn-info#simpan Simpan
+			- else 
+				button.btn.btn-info(data-id = result.id ).simpan Simpan
+			button.btn.btn-danger(style = "margin-left : 10px;")#batal Batal
+script.
+	pageSetUp();
+
+	$(function (){
+		$('#batal').click(function (e){
+			e.preventDefault();
+			$('#tempat-pesan').html('');
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		function SendData (data , url , selector) {
+			$.ajax({
+				url : url,
+				dataType : 'json',
+				type : 'POST',
+				data : data,
+				success : function (msg) {
+					if (msg.status == 'sukses'){
+						$('#modal_All').modal('hide');
+						$('#tempat-pesan').html('');
+						UpdateLabel();
+						$('#clear').click();
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger "> '+msg.pesan+'</p>');
+					}
+					$(selector).attr('disabled',false);
+					return false;
+				}
+			});
+		}
+
+		$('.simpan').click(function (e){
+			e.preventDefault();
+			var label = $('#label').val();
+			var id_parent = $('#parent').val();
+			$(this).attr('disabled',true);
+			var id = $(this).attr('data-id');
+			var tag = $('#tag').val();
+			if (tag == '') {
+				$('.simpan').attr('disabled', false);
+				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+			} else {
+				tag = $.trim(tag);
+				tag = tag.replace(/\s/gi, '-');
+				SendData({tag : tag , menu_parent_id : id_parent , id : id } , '/manage/label-tag/edit' , '.simpan');
+			}
+			return false;
+		});
+
+		$('#simpan').click(function (e){
+			e.preventDefault();
+			$(this).attr('disabled',true);
+			var tag = $('#tag').val();
+			var id_parent = $('#parent').val();
+			var label = $('#label').val();
+			if (tag == '') {
+				$('#simpan').attr('disabled', false);
+				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+			} else {
+				tag = $.trim(tag);
+				tag = tag.replace(/\s/gi, '-');
+				SendData({tag : tag , menu_parent_id : id_parent , label : label } , '/manage/label-tag/simpan', '#simpan');
+			}
+			return false;
+		});
+
+	});

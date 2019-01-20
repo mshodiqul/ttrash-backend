@@ -1,0 +1,95 @@
+extends layout
+block content
+	mixin rupiah(n)
+		- var hg = "Rp. "+ (n/1000).toFixed(3).replace(/(\d)(?=(\d{3})+\.)/g, "$1.");
+		b=hg
+	div.row
+		div.col-md-8
+			div.box.box-content.border-bottom-primary
+				h4= item.title
+				- var img = item.images[0].imageUrl
+				div.img-multi(style="background-image:url('" + img + "')" data-img = img)
+				div.box-desc
+					p= item.Keterangan
+		div.col-md-4
+			div.box.box-content.border-bottom-primary
+				div.box-desc
+					center
+						h4= item.title
+						h2
+							+rupiah(item.harga)
+					div.clearfix
+					br
+					div.col-md-4
+					div.form-group.col-md-4
+						div.input-group
+							span.input-group-addon.primary.color-white.pointer(onclick="minValue()")
+								i.fa.fa-minus
+							input(type="number" class="form-control no-border no-spin text-center" style="height:50px" value="1" onblur="checkValue(this)")#totalValue
+							span.input-group-addon.primary.color-white.pointer(onclick="plusValue()")
+								i.fa.fa-plus
+					div.col-md-4
+					button.btn.btn-info.full-width.btn-lg(onclick="addToCart()")
+						i.fa.fa-shopping-cart
+						| &nbsp; BELI
+
+	script.
+
+		$(function () {
+			localStorage.removeItem("cart_item");
+		});
+
+		var uriPath = "item";		
+		function minValue() {
+			var selector = $("#totalValue");
+			var current = selector.val();
+			if (current > 1) {
+				selector.val(parseInt(current) - 1);
+			}
+		}
+
+		function plusValue() {
+			var selector = $("#totalValue");
+			var current = selector.val();
+			selector.val(parseInt(current) + 1);
+		}
+
+		function checkValue(element) {
+			if ($(element).val() == '' || $(element).val() < 1) {
+				$(element).val(1);	
+			}
+		}
+
+		function addToCart() {
+			var value = $("#totalValue").val();
+			var currentValue = parseInt($("#cartTotal2").text());
+			var total = parseInt(value) + currentValue;
+
+			var totalHarga = parseInt("#{item.harga}") * value;
+			var data = {
+				id : "#{item.id}",
+				title : "#{item.title}",
+				price : parseInt("#{item.harga}"),
+				jumlah : parseInt(value),
+				totalHarga : totalHarga,
+				images : "#{item.images[0].imageUrl}",
+			}
+
+			var dataToSave = [];
+			var cart = localStorage['cart_' + uriPath] != undefined ? JSON.parse(localStorage['cart_' + uriPath]) : [];
+			var duplicate = false;
+			for (var i = 0; i < cart.length; i++) {
+				if("#{item.id}" === cart[i].id){
+					if (localStorage['cart_' + uriPath]) {
+						cart[i].jumlah += parseInt(value);
+					}
+					cart[i].totalHarga = cart[i].jumlah * parseInt("#{item.harga}");
+					duplicate = true;
+					break;
+				}
+			}
+			duplicate == false ? cart.push(data) : '';
+			localStorage['cart_' + uriPath] = JSON.stringify(cart);
+			//- $("html, body").animate({ : 0}, 100)
+			window.location.href= "/checkout";
+		}

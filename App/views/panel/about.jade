@@ -1,0 +1,103 @@
+div.row
+	article(class = "col-md-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 SETTING ABOUT
+			div
+				div(class = "jarviswidget-editbox")
+				div(class = "widget-body no-padding")
+					div#tempat-pesan(style = "margin : 5px;")
+					form.form-horizontal(style = "margin-top : 10px; margin-left : 20px;")
+						div.form-group
+							label.control-label.col-lg-1 Description
+							div.col-lg-7
+								div.summernote#page-content
+									if data
+										!= data.desc && data.desc
+						- if (role_group != "dinas")
+							div.form-group
+								label.control-label.col-lg-1
+								div.col-lg-7
+									button.btn.btn-primary(data="edit")#simpan Submit
+
+script.
+	pageSetUp();
+
+	var pagefunction = function() {
+		$('.summernote').summernote({
+			height: 200,
+			toolbar: [
+				['style', ['style']],
+				['font', ['bold', 'italic', 'underline', 'clear']],
+				['fontname', ['fontname']],
+				['color', ['color']],
+				['para', ['ul', 'ol', 'paragraph']],
+				['height', ['height']],
+				['table', ['table']],
+				['insert', ['link', 'picture', 'hr']],
+				['view', ['fullscreen', 'codeview', 'help']]
+			]
+		});
+
+		$('#simpan').click(function (e){
+			e.preventDefault();
+			var desc = $("#page-content").summernote('code');
+			//- $("#page-content").summernote('code');
+			var selector = $(this);
+			selector.attr('disabled', true);
+			if (desc == "") {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i>data masih kosong</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+				selector.attr('disabled', false);
+			} else {
+				var data = {
+					desc : desc
+				}
+				$.ajax({
+					url : '/manage/about/proses',
+					type : 'POST',
+					dataType : 'json',
+					data : data,
+					success : function (msg) {
+						if (msg.status == 200 ) {
+							$.smallBox({
+								content : "<i class='fa fa-clock-o'></i> <i> data berhasil di proses</i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						} else {
+							$.smallBox({
+								title : "Peringatan",
+								content : "<i class='fa fa-clock-o'></i> <i>"+msg.pesan+"</i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						selector.attr('disabled', false);
+					}
+				})
+			}
+		});
+	};
+
+	var pagedestroy = function(){
+		
+		// destroy summernote
+		$(".summernote").summernote( 'destroy' );
+
+		// debug msg
+		if (debugState){
+			root.console.log("✔ Summernote and Markdown editors destroyed");
+		}
+	}
+
+	loadScript("/js/plugin/summernote/summernote.min.js", pagefunction);

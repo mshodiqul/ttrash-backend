@@ -1,0 +1,113 @@
+form.form-horizontal
+	.form-group
+		div.col-lg-12
+			div#map(style="height: 500px")
+	.form-group
+		label.control-label.col-lg-3 Nama
+		div.col-lg-7
+			input.form-control#nama
+	.form-group
+		label.control-label.col-lg-3 Alamat
+		div.col-lg-7
+			input.form-control#alamat
+	.form-group
+		div.col-lg-7.col-lg-offset-3
+			button.btn.btn-primary#simpan(style = "margin-right : 10px;") Simpan
+			button.btn.btn-danger#batal Batal
+
+script(src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIORcUZ6UllJC8lCpHzAOQ3ChvlDDA7GQ&callback=initMap" async defer)
+script.
+	pageSetUp()
+	let marker = null;
+	let map = null;
+	let lat = 0.0;
+	let lng = 0.0;
+
+	function initMap() {
+		map = new google.maps.Map(document.getElementById('map'), {
+			center: {
+				lat : -6.7997862, lng : 110.8239214
+			},
+			zoom : 14
+		})
+
+		map.addListener('click', onClickMap)
+	}
+
+	function onClickMap(event) {
+		var location = event.latLng;
+		if (marker) {
+			marker.setPosition(location)
+		} else {
+			marker = new google.maps.Marker({
+				position: location,
+				map: map
+			})
+			marker.setMap(map)
+		}
+
+		lat = location.lat()
+		lng = location.lng()
+	}
+
+	$(function () {
+
+		$('#batal').click(function (e){
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		$('#simpan').click(function (e){
+			e.preventDefault();
+			var selector = $(this);
+			var nama = $('#nama').val();
+			var alamat = $("#alamat").val();
+
+			selector.attr('disabled', true);
+			if (nama == "" || alamat == "" || lat == 0.0 || lng == 0.0) {
+				selector.attr('disabled', false);
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> data masih ada yang kosong </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} else {
+				var data = {
+					nama : nama,
+					latitude: lat,
+					longitude: lng,
+					alamat: alamat
+				}
+				$.ajax({
+					url : '/bank-sampah/simpan',
+					type : 'POST',
+					dataType : 'json',
+					data : data,
+					success : function (msg) {
+						if (msg.status == 'sukses' ) {
+							$.smallBox({
+								content : "<i class='fa fa-clock-o'></i> <i> Berhasil Menambah Bangsampah !!!</i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+							$('#batal').click();
+						} else {
+							$.smallBox({
+								title : "Peringatan",
+								content : "<i class='fa fa-clock-o'></i> <i>"+msg.pesan+"</i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						selector.attr('disabled', false);
+					}
+				})
+			}
+		})
+	});
+	

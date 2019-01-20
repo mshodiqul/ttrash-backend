@@ -1,0 +1,117 @@
+div.row
+	article(class = "col-md-8")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 MENGHITUNG POINT 
+			div
+				div(class = "jarviswidget-editbox")
+				div(class = "widget-body no-padding")
+					div#tempat-pesan(style = "margin : 5px;")
+					form.form-horizontal(style = "margin-top : 10px; margin-left : 20px;")
+						div#list_template(style = "display : none;")
+							div.form-group
+								label.control-label.col-lg-2 Kategori
+								div.col-lg-6
+									select.form-control#harga
+										option(value = "") Pilih Kategori
+										each h in harga
+											- label = h.nama+" - "+h.harga
+											option(value=h.harga)=label
+								div.col-lg-2
+									input.form-control#kilo(type = "text" placeholder = "Kilo")
+								div.col-lg-1
+									button.btn.btn-default(onclick = "deleteForm(this)")
+										i.fa.fa-trash
+						div#list_data
+							div.form-group
+								label.control-label.col-lg-2 Kategori
+								div.col-lg-6
+									select.form-control#harga
+										option(value = "") Pilih Kategori
+										each h in harga
+											- label = h.nama+" - "+h.harga
+											option(value=h.harga)=label
+								div.col-lg-2
+									input.form-control#kilo(type = "text" placeholder = "Kilo")
+								//- div.col-lg-1
+									button.btn.btn-default(onclick = "deleteForm(this)")
+										i.fa.fa-trash
+						//- div.form-group
+							label.control-label.col-lg-2 Total
+							div.col-lg-6
+								input.form-control#total(type = "text")
+
+						div.form-group
+							div.col-lg-7.col-lg-offset-2
+								button.btn.btn-primary#simpan(style = "margin-right : 10px;") Submit
+								a.btn.btn-danger(style = "margin-right : 10px;" href = "#/transaksi/sampah") Batal
+								button.btn.btn-default#addForm
+									i.fa.fa-plus
+
+script.
+	pageSetUp();
+
+	function deleteForm (selector) {
+		$(selector).closest('div.form-group').remove();
+		return false;
+	}
+
+	$(function (){
+
+		$('#simpan').click(function (e) {
+			e.preventDefault();
+			var selector = $(this);
+			//- var total = $('#total').val();
+			var id_order = "#{id_order}";
+			var id_driver = "#{id_driver}";
+			var customer_id = "#{customer_id}";
+			var arr = [];
+			selector.attr('disabled', true);
+			
+			if ($('#list_data').find('.form-group').length != 0 ) {
+				$('#list_data div.form-group').each(function (x){
+					var harga = $(this).find('select#harga').val();
+					var total = $(this).find('input#kilo').val();
+					arr.push({
+						harga : harga,
+						total : total
+					});
+				});
+			}
+			var data = {
+				//- total : total,
+				id_order : id_order,
+				customer_id : customer_id,
+				id_driver : id_driver,
+				kategori : arr
+			}
+			$.ajax({
+				url : '/transaksi/sampah/hitung',
+				type : 'POST',
+				dataType : 'json',
+				data : { data : JSON.stringify(data)},
+				success : function (msg) {
+					if (msg.status == 200 ) {
+						window.location.href = "#/transaksi/sampah";
+					} else {
+						$.smallBox({
+							title : "Peringatan",
+							content : "<i class='fa fa-clock-o'></i> <i>"+msg.pesan+"</i>",
+							color : "#C46A69",
+							iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+							timeout : 1000
+						});
+					}
+					selector.attr('disabled', false);
+				}
+			})
+		});
+		
+		$('#addForm').click(function (e){
+			e.preventDefault();
+			var copyElm = $('#list_template').html();
+			$('#list_data').append(copyElm);
+		})
+	});

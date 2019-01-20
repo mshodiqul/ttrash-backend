@@ -1,0 +1,113 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 REQUEST SAMPAH
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						+component(data)
+						- if (role_group == "admin")
+							button.btn.btn-default.pull-left(id= "jemput" data-original-title= "Jemput Sampah" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") Jemput
+						div.col-lg-3.col-sm-3.col-xs-4
+							select#filter.form-control
+								option(value="all") -- Pilih Status --
+								option(value = "pendding") Belum di Jemput
+								option(value = "confirm") Sedang di Jemput
+								option(value = "done") Sudah di Jemput
+						- if (role_group != "admin")
+							div.col-lg-3.col-sm-3.col-xs-4
+								select#bankSampah.form-control
+									option(value="all") Pilih
+									each bs in BankSampah
+										option(value=bs._id)=bs.nama
+					table(id = "table-request" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Nama
+								th Nomor Telp
+								th Lokasi
+								th Status
+								th Tanggal
+
+script.
+	pageSetUp();
+	var selected = [];
+
+	$(function (){
+		let role_group = "#{role_group}";
+		let id_bankSampah = "#{id_bankSampah}";
+		var dataTableWidth = [{'targets':0,'width':'15px'},{'targets':1,'width':'75px'},{'targets':2,'width':'50px'},{'targets':3,'width':'150px'},{'targets':4,'width':'25px'},{'targets':5,'width':'65px'}];
+		var dataTableURL = "";
+		if (role_group == "admin") {
+			dataTableURL = '/request/sampah/dataTable/all/'+id_bankSampah;
+		} else {
+			dataTableURL = '/request/sampah/dataTable/all/all';
+		}
+
+		var tableuser = dataTable('#table-request',dataTableURL,dataTableWidth ,{ selectable : [1,2,3,4,5] });
+		
+		function refresh(){
+			tableuser.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-request');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$('#bankSampah').change(function (e) {
+			e.preventDefault();
+			let bankSampah = $(this).val();
+			let status = $('#filter').val();
+			let urlTable = '/request/sampah/dataTable/'+status+'/'+bankSampah;
+			tableuser = dataTable('#table-request',urlTable,dataTableWidth ,{ selectable : [1,2,3,4,5]});
+		});
+
+		$('#filter').change(function (e){
+			e.preventDefault();
+			let isi = $(this).val();
+			let bankSampah = "";
+			if (role_group == "admin") {
+				bankSampah = id_bankSampah;
+			} else {
+				bankSampah = $('#bankSampah').val();
+			}
+
+			let urlTable = '/request/sampah/dataTable/'+isi+'/'+bankSampah;
+			tableuser = dataTable('#table-request',urlTable,dataTableWidth ,{ selectable : [1,2,3,4,5]});
+		});
+
+		$('#jemput').click(function (e) {
+			e.preventDefault();
+			if (selected.length != 0 ) {
+				$.post("/request/sampah/getDriver", {data : JSON.stringify(selected)} , function (data, status){
+					if (status == "success") {
+						$('div#modal_All').modal('show');
+						$('#modal_All .modal-title p').text("Jemput Sampah");
+						$('div#modal_All div#kosong').html('');
+						$('div#AllModal').html(data);
+					}
+				});
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> data belum di pilih </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			}
+		});
+	});

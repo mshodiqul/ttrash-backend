@@ -1,0 +1,51 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-bank")
+				h2 BANK SAMPAH
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ onclick : 'DataTableAdd("/bank-sampah/add","Tambah Bank Sampah Baru")' , title : 'Tambah Bank Sampah' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}, {onclick : 'DataTableEdit("/bank-sampah/edit","Edit Bank Sampah")' , title : 'Edit Bank Sampah' , kelas : 'fa-pencil'}  , {url : '/bank-sampah/delete' , onclick : 'DataTableDelete("/bank-sampah/delete")', title : 'Hapus Bank Sampah' , kelas : 'fa-trash-o'}]
+						+component(data)
+					table(id = "table-bank-sampah" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Nama Bank
+								th Latitude
+								th Longitude
+								th Alamat
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/bank-sampah/dataTable';
+
+		var tablegroup = dataTable('#table-bank-sampah',dataTableURL,dataTableWidth ,{ selectable : [1,2,3,4] });
+		
+		function refresh(){
+			tablegroup.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-bank-sampah');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+	});

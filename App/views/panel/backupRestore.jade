@@ -1,0 +1,59 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-book")
+				h2 BACKUP AND RESTORE MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else
+							- data = [{ ID : 'btnBackup', title : 'Backup Database', kelas : 'fa-floppy-o',onclick : 'DataTableAdd("/manage/backup-restore/tambah","Backup Database Baru")'}, {ID : 'restore', title : 'Restore Database', kelas : 'fa-database', onclick : 'DataTableAction("/manage/backup-restore/restore", "POST")'}, {ID : 'delete', title : 'Delete File', kelas : 'fa-trash-o', onclick : 'DataTableDelete("/manage/backup-restore/delete")'}, {ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						+component(data)
+					table(id = "table-backup" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th(data-hide="phone,tablet") Name
+								th Date
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth = [{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/backup-restore/dataTable';
+
+		var tablebackup = dataTable('#table-backup',dataTableURL,dataTableWidth ,{ selectable : [1,2,3] });
+		
+		function refresh(){
+			tablebackup.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-backup');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$('#test-backup').click(function (e){
+			e.preventDefault();
+			$('.modal-admin').css('width', '');
+			$('.modal-dialog').css('width', '');
+			$('div#modal_All').modal('show');
+			$('#modal_All .modal-title p').text('Backup Database');
+			$('div#modal_All div#kosong').html('');
+			$('div#AllModal').load('/manage/backup-restore/test-backup');
+		});
+	});

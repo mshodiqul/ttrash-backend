@@ -1,0 +1,752 @@
+//- style.
+	.postered {
+		border: 4px dotted rgb(0, 0, 0);		
+	}
+//- template content type
+mixin contentFieldType(type , obj, view )
+	div.row(style = 'margin-bottom : 0px !important').box-contentType
+		div.col-lg-4#boxnya
+			div.form-group
+				div.col-lg-11
+					select.form-control#type(onchange = "ChangeType(this)" onClick = "ChangeType(this)")
+						- var data = [];
+						if (view == "tree")
+							- data = ['string','images','text','label_tag'];
+						else
+							- data = ['string','images','text','label_tag','editor','geometry-point','select']
+						option(value = "") -- Pilih Type --
+						- if (type == 'tambah')
+							- for (t = 0; t < data.length; t++)
+								option(value = data[t])=data[t].toUpperCase()
+						- else
+							- for (t = 0; t < data.length; t++)
+								- if (obj.type == data[t])
+									option(value = data[t] selected)=data[t].toUpperCase()
+								- else
+									option(value = data[t])=data[t].toUpperCase()
+		div.col-lg-5.labelcontainer
+			div.form-group
+				- if (type == 'tambah')
+					div.col-lg-11#boxIsi
+						input.form-control.labelfield(type = 'text' disabled = "disabled")
+				- else
+					div.col-lg-11#boxIsi(data-type = obj.type)
+						input.form-control.labelfield(type = 'text' value = obj.label data-type = obj.type)
+		if (view != 'tree')
+			div.col-lg-1
+				div.form-group
+					div.col-lg-1
+						div.checkbox
+							label
+								- if (type == 'tambah')
+									input(type = 'checkbox' name = "checkbox")#multi
+								- else 
+									- if (obj.multi == true)
+										input(type = 'checkbox' checked name = "checkbox")#multi
+									- else
+										input(type = 'checkbox' name = "checkbox")#multi
+			div.col-lg-1
+				div.form-group
+					div.col-lg-1
+						div.checkbox
+							label
+								- if (type == 'tambah')
+									input(type = 'checkbox' name = "checkbox")#visible
+								- else 
+									- if (obj.visible == true)
+										input(type = 'checkbox' checked name = "checkbox")#visible
+									- else 
+										input(type = 'checkbox' name = "checkbox")#visible
+		div.col-lg-1
+			div.form-group
+				button.btn.btn-default.fa.fa-trash-o(onClick = 'HapusItem(this)')
+	script.
+		//- pageSetUp();
+
+		function HapusItem(selector) {
+			$(selector).closest('div.box-contentType').remove();
+			return false;
+		}
+
+		function GetLabelTag (cb) {
+			$.ajax({
+				url : '/manage/label-tag/getData',
+				type : 'POST',
+				dataType : 'json',
+				success : function (msg) {
+					cb(null ,msg);
+				}
+			});
+		}
+
+		$(function (){
+			var type_label = '#{obj.type}';
+			if ('#{type}' == 'edit' && type_label == 'label_tag') {
+				GetLabelTag(function (err , labelTag){
+					$('.box-contentType div ').each(function (x){
+						var target = $(this).find('#boxIsi[data-type="label_tag"]') //$('#boxIsi[data-type="label_tag"]');
+						var value_label = target.find('input.labelfield').val();
+
+						var element = "<select class = 'form-control labelfield'>";
+						element += '<option value = ""> Choose Label </option>';
+						labelTag.forEach(function (i){
+							if (i.label == value_label) {
+								element += '<option value = '+i.label+' data-id = '+i.label+' selected>'+i.label+'</option>';
+							} else {
+								element += '<option value = '+i.label+' data-id = '+i.label+'>'+i.label+'</option>';
+							}
+						});
+						if (value_label != undefined) {
+							target.html(element);
+						}
+					});
+				});
+			}
+		});
+
+		function ChangeType(selector) {
+			var isi = $(selector).val();
+			if (isi == 'string') {
+				var element = '<input class = "form-control labelfield" type = "text"></input>';
+				$(selector).closest('#boxnya').next().find('#boxIsi').html(element);
+				$(selector).closest('div.box-contentType').find('.labelcontainer input.labelfield').focus();
+				$(selector).closest('.box-contentType').find('div.checkbox input#multi').attr('disabled', false);
+			} else if (isi == "select") {
+				var element = '<input class = "form-control labelfield" type = "text"></input>';
+				$(selector).closest('#boxnya').next().find('#boxIsi').html(element);
+				$(selector).closest('div.box-contentType').find('.labelcontainer input.labelfield').focus();
+				$(selector).closest('.box-contentType').find('div.checkbox input#multi').attr('disabled', false);
+				$(selector).closest('.box-contentType').find('div.checkbox input#multi').attr('disabled', true);
+			} else if (isi == 'label_tag') {
+				GetLabelTag(function (err , labelTag){
+					var element = "<select class = 'form-control labelfield'>";
+					element += '<option value = ""> Choose Label </option>';
+					labelTag.forEach(function (i){
+						element += '<option value = '+i.label+' data-id = '+i.label+'>'+i.label+'</option>';
+					});
+					element += '</select>';
+					$(selector).closest('.box-contentType').find('#boxIsi').html(element);
+					$(selector).closest('.box-contentType').find('div.checkbox input#multi').attr('disabled', true);
+				})
+			} else  {
+				var element = '<input class = "form-control labelfield" type = "text" value = "'+isi+'"></input>';
+				$(selector).closest('#boxnya').next().find('#boxIsi').html(element);
+				$(selector).closest('.box-contentType').find('div.checkbox input#multi').attr('disabled', false);
+			}
+		}
+
+mixin itemField_editor(type , multi , label , value , obj_label)
+	div(class='col-lg-12 editor' style="margin-bottom:1em")
+		- if (type == 'tambah')
+		div.col-md-12
+			center
+				span(class="entry-word-count") 0 words
+		div.col-md-6
+			section(class="editor")
+				div(class="outer")
+					div(class="editorwrap" style="border:3px dotted#666; padding:10px")
+						- if (type == 'tambah')
+							textarea#entry-markdown.entry-markdown
+						- else
+							textarea#entry-markdown.entry-markdown
+								= value&&value.value
+		div.col-md-6
+			div(style="height:326px; overflow-y:auto; border:3px dotted#666;")
+				section(class="entry-preview active")
+						section(class="entry-preview-content" style="padding:10px")
+							div(class="rendered-markdown")
+
+mixin itemField_imdb(type , multi , label , obj)
+	- var object = obj || null
+	div.tempat_imdb
+		div.row(data-list = "1")
+			div.col-lg-12
+				div.form-group
+					label.control-label.col-lg-1.text-right IMDB
+					div.col-lg-6
+						- if (object == null)
+							input.form-control(type = 'text' id = 'imdbID' onblur = 'GenerateImdb(this)')
+						- else
+							input.form-control(type = 'text' data-type = "edit" value = obj.imdb id = 'imdbID' onblur = 'GenerateImdb(this)')
+			- if (multi)
+				div.col-lg-1
+					div.form-group
+						button.btn.btn-default(onClick = "HapusItem(this)")
+							i.fa.fa-trash-o
+	- if (multi)
+		div.row
+			div.col-lg-11
+				div.form-group
+					button.btn.btn-primary.pull-right.add-imdb(data-original-title= 'Add Imdb' data-placement="bottom" rel="tooltip")
+						i.fa.fa-plus
+	script.
+		function GenerateImdb(selector) {
+			var imdb = $(selector).val();
+			var type = $(selector).attr('data-type');
+			$('#simpanItems').attr('disabled', true);
+			$('#editItems').attr('disabled', true);
+			if (imdb != '') {
+				$('#tempat-pesan').html("");
+				$.ajax({
+					url : '/item/getImdb',
+					type : 'POST',
+					dataType : 'json',
+					data : { imdb : imdb , type : type},
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							var selector2 = $('#list_data .tempat_image div#box-img');
+							var data_kat = [];
+							var data_actor = msg.data.actor;
+							var data_director = msg.data.director;
+							if (data_director) {
+								data_director = data_director.split(',');
+							}
+
+							if (data_actor) {
+								data_actor = data_actor.split(',');
+							}
+							var obj_actor = [];
+							var arr_director = [];
+							data_actor.forEach(function (a){
+								obj_actor.push({
+									title : a
+								});
+							});
+							data_director.forEach(function (d){
+								arr_director.push({
+									title : d
+								});
+							})
+							var element_year = '<option selected value = '+msg.data.year+'>'+msg.data.year+'</option>';
+							msg.data.genre.forEach(function (i){
+								data_kat.push({
+									title : i
+								});
+							});
+							
+							var $select1 = $('#list_data select#select-label.tambahan[data-label = "genre"]');
+							var $select2 = $('#list_data select#select-label.tambahan[data-label = "year"]');
+							var $select3 = $('#list_data select#select-label.tambahan[data-label = "cast"]');
+							var $select4 = $('#list_data select#select-label.tambahan[data-label = "director"]');
+							
+							if ($select1[0] != undefined ) {
+								var selectize1 = $select1[0].selectize;
+								selectize1.addOption(data_kat);
+								msg.data.genre.forEach(function (g){
+									selectize1.addItem(g);
+								});
+							}
+							
+							if ($select2[0] != undefined ) {
+								var selectize2 = $select2[0].selectize;
+								selectize2.addOption({title : msg.data.year});
+								selectize2.addItem(msg.data.year);
+							}
+							
+							if ($select3[0] != undefined ) {
+								var selectize3 = $select3[0].selectize;
+								selectize3.addOption(obj_actor);
+								data_actor.forEach(function (c){
+									selectize3.addItem(c);
+								});
+							}
+							
+							if ($select4[0] != undefined ) {
+								var selectize4 = $select4[0].selectize;
+								selectize4.addOption(arr_director);
+								data_director.forEach(function (di){
+									selectize4.addItem(di);
+								})
+							}
+							setTimeout(function (){
+								selector2.find('img.thumnail').attr('src', msg.data.cover);
+								selector2.find('input.image').attr('data-file' , msg.data.cover);
+								selector2.find('.thumnail').css('background-image', 'url(\''+msg.data.cover+'\')');
+							},1000);
+							$('#imdbID').attr('data-obj', JSON.stringify(msg.data));
+							$('#title').val(msg.data.title);
+							$('#list_data .tempat_text textarea[data-nama = "plot"]').val(msg.data.plot);
+							$('#list_data input[data-nama = "released"]').val(msg.data.released);
+							$('#list_data input[data-nama = "rate"]').val(msg.data.rating);
+							$('#list_data input[data-nama = "seriesid"]').val(msg.data.seriesID);
+						} else {
+							$('#tempat-pesan').html("<p class='alert alert-warning'><i class='fa fa-minus-circle'></i> "+msg.pesan+" </p>");
+							$('#imdbID').focus();
+						}
+						$('#simpanItems').attr('disabled',false);
+						$('#EditItems').attr('disabled',false);
+					}
+				});
+			} else {
+				$('#tempat-pesan').html("<p class='alert alert-warning'><i class='fa fa-minus-circle'></i> Data Imdb Kosong !!! </p>");
+				$('#loading').hide();
+				$('#simpanItems').attr('disabled',false);
+				$('#EditItems').attr('disabled',false);
+			}
+		}
+
+mixin itemField_label_tag(type , multi , label , value , obj_label)
+	- var object_tag = obj_label || null
+	div.row
+		- if (object_tag == null)
+			div.tempat_labeltag(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+				div.row(style = 'margin-top : 10px;')#box-labelTag
+					div.col-lg-12
+						div.form-group
+							label.control-label.col-lg-1.text-right=label
+							- var clasmulti = '';
+							- if (multi)
+								- clasmulti = 'input-group';
+							div.col-lg-6#box-SubLabel
+								div(class = clasmulti)
+									select.tambahan(id = "select-label" name = "label[]" multiple class = "demo-default" placeholder= "Select a label..." data-value = value data-label = label.toLowerCase())
+									- if (multi)
+										span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-labelTag')")
+											i.fa.fa-trash-o
+		- else 
+			-if (Array.isArray(object_tag) == true)
+				div.tempat_labeltag(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+					div.row(style = 'margin-top : 10px;')#box-labelTag
+						div.col-lg-12
+							div.form-group
+								label.control-label.col-lg-1.text-right=label
+								- var clasmulti = '';
+								- if (multi)
+									- clasmulti = 'input-group';
+								div.col-lg-6#box-SubLabel
+									div(class = clasmulti)
+										select.tambahan(id = "select-label" data-isi = JSON.stringify(object_tag) name = "label[]" multiple class="demo-default" placeholder= "Select a label..." data-value = value data-label = label.toLowerCase())
+										- if (multi)
+											span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-labelTag')")
+												i.fa.fa-trash-o
+
+
+		- if (multi)
+			div.row(style = "margin-top : 10px;")
+				div.col-lg-1
+				div.col-lg-9
+					button.btn.btn-primary(onclick = 'CopyElement(\'#list_template div.tempat_labeltag#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\',\'#list_data .tempat_labeltag#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\')' data-original-title= 'Add ' + label data-placement="bottom" rel="tooltip")
+						i.fa.fa-plus
+						| &nbsp;
+						=label
+
+mixin itemField_images(type , multi, label , obj_img)
+	- var array_img = obj_img || null
+	label.control-label.col-lg-1.text-right=label
+	div.col-md-9(style = "padding:0px; margin-bottom : 20px;")
+		div.tempat_image(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+			- if (array_img == null || array_img.length == 0 )
+				- if (array_img == null)
+					- var display = "block";
+				- if (multi)
+					- display = "none";	
+				form.form-horizontal(method = "POST", action = "/upload/image" style="display:" + display)#firstElement
+					div#box-img(data-list = '1')
+						div.col-md-2(style="margin-right:10px")
+							div.form-group
+								div.col-lg-9
+									div.box-img(style="position:relative; width:100px; max-height:75px")
+										div.over-img.smart-form(onClick="setPoster(this)")
+											button.btn.btn-info.btn-xs(title="Upload" type="button" onClick="uploadThumbnail(this)" style="margin-right:5px;")
+												i.fa.fa-upload
+											- if (multi)
+												button.btn.btn-info.btn-xs(title="Remove" type="button" onClick="HapusItemImage(this)")
+													i.fa.fa-trash-o
+											input(type = 'hidden' name = "file_add")#file_add
+											input.form-control.image(id="fileupload-image" accept="image/*" type="file" name="files" onClick = "UploadImage(this)" style ="display :none;")
+										div.thumnail.img(style="background-image:url('/thumbnail.png');" data-poster="false")
+			- else
+				- var no_img = 1
+				- for (m = 0; m < array_img.length; m++)
+					form.form-horizontal(method = "POST", action = "/upload/image")
+						div(data-list = no_img )#box-img
+							div.col-md-2(style="margin-right:10px")
+								div.form-group
+									div.col-lg-12
+										- var border = "none";
+										- if (array_img[m].poster == true)
+											- border = "postered";
+										div.box-img(style="position:relative; width:100px; max-height:75px;")
+											div.over-img.smart-form(onClick='setPoster(this)')
+												button.btn.btn-info.btn-xs(title="Upload" type="button" onClick="uploadThumbnail(this)" style="margin-right:5px;")
+													i.fa.fa-upload
+												- if (multi)
+													button.btn.btn-info.btn-xs(title="Remove" type="button" onClick="HapusItemImage(this)")
+														i.fa.fa-trash-o
+												input(type = 'hidden' name = "file_add")#file_add
+												input.form-control.image(id="fileupload-image" data-file=array_img[m].imageUrl accept="image/*" type="file" name="files" onClick = "UploadImage(this)" style ="display :none;")
+											- var gambarnya = "background-image:url('" + array_img[m].imageUrl + "')";
+											div.thumnail.img.border(style=gambarnya data-poster=array_img[m].poster.toString())
+					- no_img = no_img + 1
+		
+		- if (multi)
+			form#formPlusImage(method = "POST" action = "/upload/image")
+				input(type = 'hidden' name = "file_add")#file_add
+				input.form-control.image(id="plusImage" accept="image/*" type="file" name="plusImage" onClick = "PlusImage(this)" style ="display :none;")
+			div.row
+				div.col-lg-12(style="padding-left:20px")
+					button.btn.btn-primary.add-image(data-original-title= 'Upload Image' data-placement="bottom" rel="tooltip")
+						i.fa.fa-plus
+						| &nbsp; Image
+
+	script.
+		//- pageSetUp();
+
+		function CopyElement (sumber , tujuan, file) {
+			var files = file || false
+			if (files){
+				$(sumber).children().children().attr('data-list', parseInt($(sumber).children().children().attr('data-list')) + 1 );
+			} else {
+				$(sumber).children().attr('data-list', parseInt($(sumber).children().attr('data-list')) + 1 );
+				//- console.log(parseInt($(sumber).children().attr('data-list')))
+			}
+			var no = $(sumber).children().attr('data-list');
+			// $(sumber).children().children().eq(4).find('button').attr('onclick', 'HapusItem("'+no+'")');
+			$(sumber).find("#box-label").text("");
+			$(sumber).find("#box-btn-plus").remove();
+			$(sumber).find("#firstElement").css("display:block");
+			var html = $(sumber).html();
+			$(tujuan).append(html);
+		}
+
+		function PlusImage(selector) {
+			$('div#modal_All div#kosong').html('')
+			var files = $(selector).attr('data-file');
+			$('#plusImage').fileupload({
+				sequentialUploads: true,
+				add: function(e, data) {
+					var uploadErrors = [];
+					var acceptFileTypes = /^image\/(gif|jpe?g|png)$/i;
+					if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type']) || data.originalFiles[0]['type'] == "") {
+						uploadErrors.push('Not an accepted file type');
+					}
+					if (data.originalFiles.length != 0 ) {
+						if(data.originalFiles[0]['size'] > 5000000) {
+							uploadErrors.push('Filesize is too big');
+						}
+					}
+					if(uploadErrors.length > 0) {
+						$('div#modal_All div#kosong').html("<p class='alert alert-warning'><i class='fa fa-minus-circle'></i> "+uploadErrors.join("\n")+" </p>");
+					} else {
+						data.submit();
+					}
+				},
+				dataType: 'json',
+				autoUpload: false,
+				done: function (e, data) {
+					$.each(data.result.files, function (index, file) {
+						$('<p/>').html('Upload Successful : '+file.name).appendTo('#files');
+						$('#plusImage').attr('data-file', '/media/image/'+file.name);
+						var element = $("#list_template .tempat_image");
+						element.find('#fileupload-image').attr('data-file', '/media/image/'+file.name);
+						element.find(".thumnail").removeClass("postered").attr("data-poster", "false");
+						element.find('.thumnail').css('background-image', 'url(\'/media/image/'+file.name+'\')');
+						element.find('#firstElement').css("display", "block");
+						//- console.log(element.html());
+						CopyElement(element, '#list_data .tempat_image' , true);
+					});
+				},
+				fail : function (e , data){
+					//- console.log(data);
+					$.each(data.messages, function (index, error) {
+						$('div#modal_All div#kosong').html("<p class='alert alert-warning' style='color: red;'><i class='fa fa-minus-circle'></i> "+error+" </p>");
+					});
+				},
+				progressall: function (e, data) {
+					$('#tempat-upload').show();
+					var progress = parseInt(data.loaded / data.total * 100, 10);
+					$('#tempat-upload #progress .progress-bar').css('width',progress + '%');
+					if (progress == 100)
+						$('#tempat-upload').hide();
+				}
+			}).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+		}
+
+		function HapusItemImage(selector) {
+			if (confirm('Are You Sure ?')) {
+			 	var no_list = $(selector).closest('#box-img').attr('data-list');
+			 	//- console.log(no_list);
+			 	var files = $('div#list_data .tempat_image div#box-img[data-list="'+no_list+'"] #fileupload-image').attr('data-file');
+			 	//- console.log(files)
+			 	$.ajax({
+			 		url : '/item/file/removeImage',
+			 		type : 'POST',
+			 		dataType : 'json',
+			 		data : { file : files },
+			 		success : function (msg) {
+			 			$(selector).closest('#firstElement').remove()
+			 		}
+			 	});
+				$(selector).closest("form").remove();
+			}
+			return false;
+		}
+
+		function setPoster(selector) {
+			$(".img").removeClass("postered").removeAttr("data-poster");
+			$(selector).parent().find(".img").addClass("postered").attr("data-poster", "true");
+		}
+
+		function PilihThumnail (selector) {
+			$(selector).next().click();
+			return false;
+		}
+
+		function uploadThumbnail(selector) {
+			$(selector).parent().find("#fileupload-image").click();
+			return false;
+		}
+
+		function UploadImage(selector) {
+			$('div#modal_All div#kosong').html('')
+			var list_parent = $(selector).closest("#box-img").attr("data-list");
+			//- console.log("LISTNYA", list_parent);
+			var target = $(selector).closest("#box-img");
+			var files = $(selector).attr('data-file');
+			$(selector).closest("#box-img").find('#fileupload-image').fileupload({
+				sequentialUploads: true,
+				add: function(e, data) {
+					var uploadErrors = [];
+					var acceptFileTypes = /^image\/(gif|jpe?g|png)$/i;
+					if(data.originalFiles[0]['type'].length && !acceptFileTypes.test(data.originalFiles[0]['type']) || data.originalFiles[0]['type'] == "") {
+						uploadErrors.push('Not an accepted file type');
+					}
+					if (data.originalFiles.length != 0 ) {
+						if(data.originalFiles[0]['size'] > 5000000) {
+							uploadErrors.push('Filesize is too big');
+						}
+					}
+					if(uploadErrors.length > 0) {
+						$('div#modal_All div#kosong').html("<p class='alert alert-warning'><i class='fa fa-minus-circle'></i> "+uploadErrors.join("\n")+" </p>");
+					} else {
+						$.ajax({
+							url : '/item/file/removeImage',
+							type : 'POST',
+							dataType : 'json',
+							data : { file : files },
+							success : function (msg) {
+								data.submit();
+								return false;
+							}
+						})
+					}
+				},
+				dataType: 'json',
+				autoUpload: false,
+				done: function (e, data) {
+					$.each(data.result.files, function (index, file) {
+						$('<p/>').html('Upload Successful : '+file.name).appendTo('#files');
+						target.find('#fileupload-image').attr('data-file', '/media/image/'+file.name);
+						target.find('.thumnail').css('background-image', 'url(\'/media/image/'+file.name+'\')');
+						//- SimpanFileManager(file);
+						//- console.log(target);
+					});
+				},
+				fail : function (e , data){
+					//- console.log(data);
+					$.each(data.messages, function (index, error) {
+						$('div#modal_All div#kosong').html("<p class='alert alert-warning' style='color: red;'><i class='fa fa-minus-circle'></i> "+error+" </p>");
+					});
+				},
+				progressall: function (e, data) {
+					$('#tempat-upload').show();
+					var progress = parseInt(data.loaded / data.total * 100, 10);
+					$('#tempat-upload #progress .progress-bar').css('width',progress + '%');
+					if (progress == 100)
+						$('#tempat-upload').hide();
+				}
+			}).prop('disabled', !$.support.fileInput).parent().addClass($.support.fileInput ? undefined : 'disabled');
+		}
+
+mixin itemField_select(type, multi, label, obj_select)
+	- var object_select = obj_select || null
+	div.tempat_select(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+		- if (type == 'tambah')
+			div.row(style = 'margin-top : 10px;')#box-select
+				div.col-lg-12
+					div.form-group
+						label.control-label.col-lg-1.text-right=label
+						div(class="col-lg-6")
+							select.form-control(data-nama = label.toLowerCase() id='select')
+							- if (multi)
+								span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-select')")
+									i.fa.fa-trash-o
+		- else 
+			div.row(style = 'margin-top : 10px;')#box-select
+				div.col-lg-12
+					div.form-group
+						label.control-label.col-lg-1.text-right=label
+						div(class="col-lg-6")
+							select.form-control(data-nama = label.toLowerCase() id='select' data-value = object_select )
+							- if (multi)
+								span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-select')")
+									i.fa.fa-trash-o
+	script.
+		pageSetUp();
+		$(function () {
+			var value_select = $('select#select').attr('data-value');
+			$.ajax({
+				url : '/manage/label-tag/ambilData',
+				type : 'POST',
+				dataType : 'json',
+				success : function (data) {
+					var elmt = "<option value = ''>Pilih</option>";
+					data.forEach(function (i){
+						if (value_select != undefined && value_select == i._id) {
+							elmt += "<option selected value = '"+i._id+"' >"+i._id+"</option>";
+						} else {
+							elmt += "<option value = '"+i._id+"' >"+i._id+"</option>";
+						}
+					});
+					$('select#select').html(elmt);
+				}
+			})
+		});
+
+mixin itemField_text(type , multi, label , obj_text)
+	- var object_text = obj_text || null
+	div.tempat_text(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+		- if (type == 'tambah')
+			div.row(style = 'margin-top : 10px;')#box-text
+				div.col-lg-12
+					div.form-group
+						label.control-label.col-lg-1.text-right=label
+						- var clasmulti = '';
+						- if (multi)
+							- clasmulti = 'input-group';
+						div(class="col-lg-6")
+							div(class = clasmulti)
+								textarea.form-control(cols = '5' row = '5' data-nama = label.toLowerCase() id ='text')
+								- if (multi)
+									span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-text')")
+										i.fa.fa-trash-o
+		- else
+			- if (Array.isArray(object_text) == true)
+				- for (str = 0; str < object_text.length; str++)
+					div.row(style = 'margin-top : 10px;')#box-text
+						div.col-lg-12
+							div.form-group
+								- var clasmulti = '';
+								- if (multi)
+									- clasmulti = 'input-group';
+								label.control-label.col-lg-1.text-right=object_text[str].label
+								div.col-lg-6
+									div(class=clasmulti)
+										textarea.form-control(cols = '5' row = '5' data-nama = object_text[str].label.toLowerCase() id= 'text')=object_text[str].value
+										- if (multi)
+											span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-text')")
+												i.fa.fa-trash-o
+			- else 
+				div.row(style = 'margin-top : 10px;')#box-text
+					div.col-lg-12
+						div.form-group
+							- var clasmulti = '';
+							- if (multi)
+								- clasmulti = 'input-group';
+							label.control-label.col-lg-1.text-right=label
+							div.col-lg-6
+								div(class=clasmulti)
+									textarea.form-control(cols = '5' data-nama = label.toLowerCase() row = '5' id= 'text')=obj_text
+									- if (multi)
+										span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-text')")
+											i.fa.fa-trash-o
+
+	- if (multi)
+		div.row(style = "margin-top : 10px;")
+			div.col-lg-1
+			div.col-lg-9
+				button.btn.btn-primary(onclick = 'CopyElement(\'#list_template div.tempat_text#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\',\'#list_data .tempat_text#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\')' data-original-title= 'Add ' + label data-placement="bottom" rel="tooltip")
+					i.fa.fa-plus
+					| &nbsp;
+					=label
+
+
+mixin itemField_geometry-point(type, multi, label, value)
+	-lat = 0;
+	-long = 0;
+	if (value)
+		- long = value[0]
+		- lat = value[1]
+	div.row
+		div.tempat_geometry-point(id=label.replace(/[^a-zA-Z0-9]/g, "_"))
+			if (type == "tambah")
+				div.row(style = 'margin-top : 10px;')#box-geometry-point
+					div.col-md-12
+						div.form-group
+							label.control-label.col-lg-1.text-right= label
+							div.col-md-6
+								div.col-md-6
+									input(type="number" class="form-control latitude" placeholder="Latitude")
+								div.col-md-6
+									input(type="number" class="form-control longitude" placeholder="Longitude")
+			else
+				div.row(style = 'margin-top : 10px;')#box-geometry-point
+					div.col-md-12
+						div.form-group
+							label.control-label.col-lg-1.text-right= label
+							div.col-md-6
+								div.col-md-6
+									input(type="number" class="form-control latitude" placeholder="Latitude" value=lat)
+								div.col-md-6
+									input(type="number" class="form-control longitude" placeholder="Longitude" value=long)
+
+mixin itemField_string(type, multi, label , obj_string)
+	- var object_string = obj_string || null
+	div.tempat_string(id = label.replace(/[^a-zA-Z0-9]/g, "_"))
+		- if ( type == 'tambah' )
+			div.row(style = 'margin-top : 10px;')#box-string
+				div.col-lg-12
+					div.form-group
+						label.control-label.col-lg-1.text-right=label
+						- var clasmulti = '';
+						- if (multi)
+							- clasmulti = 'input-group';
+						div(class="col-lg-6")
+							div(class = clasmulti)
+								input.form-control(type = 'text' data-nama = label.toLowerCase() id='string')
+								- if (multi)
+									span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-string')")
+										i.fa.fa-trash-o
+		- else
+			- if (Array.isArray(object_string) == true)
+				- for (str = 0; str < object_string.length; str++)
+					div.row(style = 'margin-top : 10px;')#box-string
+						div.col-lg-12
+							div.form-group
+								- var clasmulti = '';
+								- if (multi)
+									- clasmulti = 'input-group';
+								label.control-label.col-lg-1.text-right=object_string[str].label
+								div.col-lg-6
+									div(class=clasmulti)
+										input.form-control(type = 'text' data-nama = object_string[str].label.toLowerCase() value = object_string[str].value id= 'string')
+										- if (multi)
+											span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-string')")
+												i.fa.fa-trash-o
+			- else
+				div.row(style = 'margin-top : 10px;')#box-string
+					div.col-lg-12
+						div.form-group
+							- var clasmulti = '';
+							- if (multi)
+								- clasmulti = 'input-group';
+							//- // - var cek = typeof object_string
+							label.control-label.col-lg-1.text-right=label
+							div.col-lg-6
+								div(class=clasmulti)
+									input.form-control(type = 'text' data-nama = label.toLowerCase() value = obj_string id= 'string')
+									- if (multi)
+										span.input-group-addon.btn.btn-default(onClick = "HapusItem(this,'#box-string')")
+											i.fa.fa-trash-o
+
+	- if (multi)
+		div.row(style = "margin-top : 10px;")
+			div.col-lg-1
+			div.col-lg-9
+				button.btn.btn-primary(onclick = 'CopyElement(\'#list_template div.tempat_string#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\',\'#list_data .tempat_string#'+label.replace(/[^a-zA-Z0-9]/g, "_")+'\')' data-original-title= 'Add ' + label data-placement="bottom" rel="tooltip")
+					i.fa.fa-plus
+					| &nbsp;
+					=label
+	script.
+		//- pageSetUp();
+

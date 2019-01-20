@@ -1,0 +1,138 @@
+html
+	head
+		title Laporan History Driver
+		style.
+			.keterangan {
+				marginLeft : 20px,
+			}
+
+			table {
+				border-spacing: 0;
+				border-collapse: collapse;
+			}
+
+			@media print {
+				.table {
+					border-collapse: collapse !important;
+				}
+
+				.table td,
+				.table th {
+					background-color: #fff !important;
+				}
+
+				.table-bordered th,
+				.table-bordered td {
+					border: 1px solid #ddd !important;
+				}
+			}
+
+			.table {
+				width: 100%;
+				max-width: 100%;
+				margin-bottom: 20px;
+			}
+
+			.table > thead > tr > th,
+			.table > tbody > tr > th,
+			.table > tfoot > tr > th,
+			.table > thead > tr > td,
+			.table > tbody > tr > td,
+			.table > tfoot > tr > td {
+				padding: 8px;
+				line-height: 1.42857143;
+				vertical-align: top;
+				border-top: 1px solid #ddd;
+			}
+
+			.table > thead > tr > th {
+				vertical-align: bottom;
+				border-bottom: 2px solid #ddd;
+			}
+
+			.table > caption + thead > tr:first-child > th,
+			.table > colgroup + thead > tr:first-child > th,
+			.table > thead:first-child > tr:first-child > th,
+			.table > caption + thead > tr:first-child > td,
+			.table > colgroup + thead > tr:first-child > td,
+			.table > thead:first-child > tr:first-child > td {
+				border-top: 0;
+			}
+			.table > tbody + tbody {
+				border-top: 2px solid #ddd;
+			}
+			.table .table {
+				background-color: #fff;
+			}
+
+			.table > thead > tr > td.active,
+			.table > tbody > tr > td.active,
+			.table > tfoot > tr > td.active,
+			.table > thead > tr > th.active,
+			.table > tbody > tr > th.active,
+			.table > tfoot > tr > th.active,
+			.table > thead > tr.active > td,
+			.table > tbody > tr.active > td,
+			.table > tfoot > tr.active > td,
+			.table > thead > tr.active > th,
+			.table > tbody > tr.active > th,
+			.table > tfoot > tr.active > th {
+				background-color: #f5f5f5;
+			}
+
+			.table-bordered {
+				border: 1px solid #ddd;
+			}
+
+			.table-bordered > thead > tr > th,
+			.table-bordered > tbody > tr > th,
+			.table-bordered > tfoot > tr > th,
+			.table-bordered > thead > tr > td,
+			.table-bordered > tbody > tr > td,
+			.table-bordered > tfoot > tr > td {
+				border: 1px solid #ddd;
+			}
+
+			.table-bordered > thead > tr > th,
+			.table-bordered > thead > tr > td {
+				border-bottom-width: 2px;
+			}
+	body
+		mixin rupiah(n)
+			- var hg = "Rp. "+ (n/1000).toFixed(3).replace(/(\d)(?=(\d{3})+\.)/g, "$1.");
+			td=hg
+		center
+			h2 BANGSAM
+		div.keterangan
+			- var nama = "Nama : "+driver.name
+			- var tgl = "Tanggal : "+tanggal
+			p=nama
+			p=tgl
+		br
+		table(border = "1" style="width : 100% !important;font-size : 14px;").table
+			tr
+				td Tanggal
+				td Lokasi Penjemputan
+				td Lokasi Pengantaran
+				td Type
+				td Total
+			- var grand = 0
+			each d in data
+				- var alamat1 = "-"
+				- var alamat2 = "-"
+				- if (d.params == "barang") {
+					- alamat1 = d.alamatBarang
+					- alamat2 = d.alamatTujuan
+				- } else {
+					- alamat1 = d.alamat
+				- }
+				- grand = grand + d.totalPoint
+				tr
+					td=moment(d.tanggal).format('DD MMMM YYYY HH:mm:ss')
+					td=alamat1
+					td=alamat2
+					td=d.type
+					+rupiah(d.totalPoint)
+			tr
+				td(colspan = "4" align = "right") Grant Total
+				+rupiah(grand)

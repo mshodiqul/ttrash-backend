@@ -1,0 +1,235 @@
+div.container-fluid
+	div.row
+		ul.nav.nav-tabs(role="tablist")
+			li.active#usertab
+				a(href="#user" aria-controls="user" role="tab" data-toggle="tab") Info User
+			li#ResetPass
+				a(href="#passGanti" aria-controls="user" role="tab" data-toggle="tab") Ganti Password
+		div.tab-content
+			div.tab-pane.active( role="tabpanel" id='user')
+				fiv.row
+				form.form-horizontal
+					div.form-group
+						label.control-label.col-lg-3 Username
+						div.col-lg-7
+							input.form-control(type = "text" disabled = 'disabled' value = data._id)
+					div.form-group
+						label.control-label.col-lg-3 Nama
+						div.col-lg-7
+							input.form-control(type = "text" value = data.name)#name
+					div.form-group
+						label.control-label.col-lg-3 Profesi
+						div.col-lg-7
+							input.form-control(type = "text" value = data.profesi)#profesi
+					div.form-group
+						label.control-label.col-lg-3 No. Telp
+						div.col-lg-7
+							input.form-control(type = "text" value = data.hp)#telp
+					div.form-group
+						label.control-label.col-lg-3 Email
+						div.col-lg-7
+							input.form-control(type = "text" value = data.email)#email
+					div.form-group
+						label.control-label.col-lg-3 Bank Sampah
+						div.col-lg-7
+							select.form-control#bankSampah
+								option(value = "") Pilih 
+								each bs in bankSampah
+									- if (bs._id == data.bank_sampah) 
+										option(value = bs._id selected)=bs.nama
+									- else
+										option(value = bs._id )=bs.nama
+					div.form-group
+						label.control-label.col-lg-3 Group
+						div.col-lg-7
+							select.form-control#role_group
+								option(value = "") Pilih 
+								each g in group
+									- if (g._id == data.role_group[0]) 
+										option(value = g._id selected)=g._id
+									- else
+										option(value = g._id)=g._id
+					div.form-group
+						div.col-lg-7.col-lg-offset-1
+							button.edit-user.btn.btn-info(id=data._id style = "margin-right : 10px;") Simpan
+							button.btn.btn-danger#batal-edit Batal
+			div.tab-pane( role="tabpanel" id='passGanti')
+				fiv.row
+				form.form-horizontal
+					- if (status != 'root')
+						div.form-group
+							label.control-label.col-lg-3 Password Lama
+							div.col-lg-7
+								input.form-control(type = 'password' )#pass-lama
+					div.form-group
+						label.control-label.col-lg-3 Password Baru
+						div.col-lg-7
+							input.form-control(type = 'password' )#pass-baru
+					div.form-group
+						label.control-label.col-lg-3 Password Confirm
+						div.col-lg-7
+							input.form-control(type = 'password' )#pass-baru-confirm
+					div.form-group
+						div.col-lg-7.col-lg-offset-1
+							- if (status != 'root')
+								button.reset-pass-user.btn.btn-info(id=data._id style = "margin-right : 10px;") Simpan
+							- else
+								button.reset-pass-root.btn.btn-info(id=data._id style = "margin-right : 10px;") Simpan
+							button.btn.btn-danger#batal-reset Batal
+
+script.
+	pageSetUp();
+
+	function Batal() {
+		$('#modal_All').modal('hide');
+		$('#clear').click();
+		return false;
+	}
+
+	$('#batal-reset').click(function (e){
+		e.preventDefault();
+		Batal();
+	});
+
+	$('#batal-edit').click(function (e){
+		e.preventDefault();
+		Batal();
+	});
+
+	function RemoveGroup(selector , group , id_user) {
+		var target = $(selector);
+		$.ajax({
+			url : '/manage/user/pullGroup',
+			type : 'POST',
+			dataType : 'json',
+			data : { id_arg : id_user , id_list : group },
+			success : function (msg) {
+				if (msg.status == 'sukses') {
+					target.parent().remove();
+				} else {
+					$('#modal_All #kosong').html('<p class = "alert alert-danger"> '+msg.pesan+' </p>');
+				} 
+			}
+		});
+	}
+
+	$(function (){
+		$('#add-group').click(function (e){
+			e.preventDefault();
+			var list_group = [];
+			var group = $('#role').val();
+			var user = $(this).attr('data-user');
+			$('ul#list-group li ').each(function (i){
+				list_group.push($(this).text());
+			});
+			var index = $.inArray(group , list_group);
+			//- console.log(index)
+			//- console.log(list_group)
+			if (index == -1 && group != '') {
+				$.ajax({
+					url : '/manage/user/pushGroup',
+					dataType : 'json',
+					type : 'POST',
+					data : { id_arg : user , id_list : group },
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							var element = '<li class = "list-group-item">'+group+'<a style = "cursor : pointer;" onclick = "RemoveGroup(this,\''+group+'\',\''+user+'\')" class = "pull-right"><i class = "fa fa-trash-o"></a></a></li>';
+							$('ul#list-group').append(element)
+						} else {
+							$('#modal_All #kosong').html('<p class = "alert alert-danger"> '+msg.pesan+' </p>');
+						}
+					}
+				});
+			} else {
+			}
+		});
+
+		function KirimData(url , data , selector ) {
+			$.ajax({
+				url : url,
+				type : 'POST',
+				dataType : 'json',
+				data : data ,
+				success : function (msg) {
+					console.log(msg);
+					if (msg.status == 'sukses')  {
+						Batal();
+					} else {
+						$('#modal_All #kosong').html('<p class = "alert alert-danger"> '+msg.pesan+' </p>')
+					}
+					$(selector).attr('disabled', false);
+				}
+			});
+		}
+
+		$('.reset-pass-root').click(function (e){
+			e.preventDefault();
+			var baru = $('#pass-baru').val();
+			var confirm = $('#pass-baru-confirm').val();
+			var id = $(this).attr('id');
+			$(this).attr('disabled', true);
+			if (baru == '' || confirm == '') {
+				$('.reset-pass-root').attr('disabled', false);
+				$('#modal_All #kosong').html('<p class = "alert alert-danger"> Data Masih Kosong !!! </p>')
+			} else if (baru != confirm ) {
+				$('.reset-pass-root').attr('disabled', false);
+				$('#modal_All #kosong').html('<p class = "alert alert-danger"> Password Tidak Sama !!! </p>')
+			} else {
+				var data = {
+					id : id,
+					baru : baru
+				}
+				KirimData('/manage/user/gatiPassword2', data , '.reset-pass-root');
+			}
+		});
+
+		$('.reset-pass-user').click(function (e){
+			e.preventDefault();
+			var lama = $('#pass-lama').val();
+			var baru = $('#pass-baru').val();
+			var confirm = $('#pass-baru-confirm').val();
+			var id = $(this).attr('id');
+			$(this).attr('disabled', true);
+			if (lama == '' || baru == '' || confirm == '') {
+				$('.reset-pass-user').attr('disabled', false);
+				$('#modal_All #kosong').html('<p class = "alert alert-danger"> Data Masih Kosong !!! </p>')
+			} else if (baru != confirm ) {
+				$('.reset-pass-user').attr('disabled', false);
+				$('#modal_All #kosong').html('<p class = "alert alert-danger"> Password Tidak Sama !!! </p>')
+			} else {
+				var data = {
+					id : id,
+					lama : lama,
+					baru : baru
+				}
+				KirimData('/manage/user/gatiPassword', data , '.reset-pass-user');
+			}
+		});
+
+		$('.edit-user').click(function (e){
+			e.preventDefault();
+			$(this).attr('disabled', true);
+			var email = $('#email').val();
+			var name = $('#name').val();
+			var role_group = $('#role_group').val();
+			var profesi = $('#profesi').val();
+			var telp = $('#telp').val();
+			var bankSampah = $('#bankSampah').val();
+			var id = $(this).attr('id');
+			if (email == '' || name == '' || telp == "" || profesi == "" || role_group == "") {
+				$('#modal_All #kosong').htmlhtml('<p class = "alert alert-danger"> Data Masih Kosong !!! </p>')
+				$('.edit-user').attr('disabled', false);
+			} else {
+				var data = {
+					id : id,
+					name : name,
+					email : email,
+					telp : telp,
+					profesi : profesi,
+					bankSampah : bankSampah,
+					role_group : role_group,
+				}
+				KirimData('/manage/user/edit', data , '.edit-user');
+			}
+		});
+	});

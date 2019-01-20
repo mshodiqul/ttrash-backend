@@ -1,0 +1,48 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-6")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 GROUP MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ onclick : 'DataTableAdd("/manage/group/add","Tambah Group Baru")' , title : 'Create New Group' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}, {url : '/manage/group/delete' , onclick : 'DataTableDelete("/manage/group/delete")', title : 'Delete Group' , kelas : 'fa-trash-o'}]
+						+component(data)
+					table(id = "table-group" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Group
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/group/dataTable';
+
+		var tablegroup = dataTable('#table-group',dataTableURL,dataTableWidth ,{ selectable : [1] });
+		
+		function refresh(){
+			tablegroup.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-group');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+	});

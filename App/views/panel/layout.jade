@@ -1,0 +1,122 @@
+doctype html
+html
+	head
+		meta(charset="utf-8")
+		title=title
+		meta(name="description" content="")
+		meta(name="author" content="")
+		meta(name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/bootstrap.min.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/font-awesome.min.css")
+			
+		link(rel = "stylesheet" type = "text/css" media = "screen" href = "/css/smartadmin-production-plugins.min.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/smartadmin-production.min.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/smartadmin-skins.min.css")
+		link(rel="stylesheet", type="text/css", href="/css/fontawesome-iconpicker.min.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/smartadmin-rtl.min.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/custom/datatable.css")
+		link(rel="stylesheet" type="text/css" media="screen" href="/css/custom.css")
+
+		link(rel="stylesheet", type="text/css", href="/css/selectize.css")
+		link(rel="stylesheet", type="text/css", href="/css/jquery.fileupload.css")
+
+		//- FAVICONS
+		//- link(rel="shortcut icon" href="/img/favicon/favicon.ico" type="image/x-icon")
+		//- link(rel="icon" href="img/favicon/favicon.ico" type="image/x-icon")
+		//- link(rel="stylesheet" href="http://fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,300,400,700")
+
+		link(rel="apple-touch-icon" href="/img/splash/sptouch-icon-iphone.png")
+		link(rel="apple-touch-icon" sizes="76x76" href="/img/splash/touch-icon-ipad.png")
+		link(rel="apple-touch-icon" sizes="120x120" href="/img/splash/touch-icon-iphone-retina.png")
+		link(rel="apple-touch-icon" sizes="152x152" href="/img/splash/touch-icon-ipad-retina.png")
+
+		//- Startup image for web apps 
+		link(rel="apple-touch-startup-image" href="/img/splash/ipad-landscape.png" media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape)")
+		link(rel="apple-touch-startup-image" href="/img/splash/ipad-portrait.png" media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait)")
+		link(rel="apple-touch-startup-image" href="/img/splash/iphone.png" media="screen and (max-device-width: 320px)")
+
+	body(class="smart-style-1")
+		header(id = "header")
+			div#logo-group
+				span#logo
+					//- img(src="/img/logo.png" alt="AVOCADO")
+			div.pull-right
+				div(id="hide-menu" class="btn-header pull-right")
+					span
+						a(href="javascript:void(0);" data-action="toggleMenu" title="Collapse Menu")
+							i(class="fa fa-reorder")
+				//- MOBILE
+				ul(id="mobile-profile-img" class="header-dropdown-list hidden-xs padding-5")
+					li
+						a(href="#" class="dropdown-toggle no-margin userdropdown" data-toggle="dropdown")
+							img(src="/img/avatars/sunny.png" alt="John Doe" class="online")
+						ul(class="dropdown-menu pull-right")
+							li
+								a(href="javascript:void(0);" class="padding-10 padding-top-0 padding-bottom-0")
+									i(class="fa fa-cog") 	Setting
+							li(class="divider")
+							li
+								a(href="javascript:void(0);" class="padding-10 padding-top-0 padding-bottom-0")
+									i(class="fa fa-user") 	Profil
+
+				//- BUTTON LOGOUT
+				div(id = "logout" class = "btn-header transparent pull-right")
+					span
+						a(href = "/user/logout" title = "Sign Out" data-action = "userLogout" data-logout-msg = "You can improve your security further after logging out by closing this opened browser")
+							i(class="fa fa-sign-out")
+
+		aside#left-panel
+
+			div(class = "login-info")
+				span
+					a(href = "#" id  = "show-shortcut" data-action = "toggleShortcut")
+						img(src="/favicon.ico" alt="me" class="online" )
+						span=user._id
+						i(class = "fa fa-angle-down")
+			//- NAVIGASI
+			nav!=Menu
+
+				span(class="minifyme" data-action="minifyMenu")
+					i(class="fa fa-arrow-circle-left hit")
+
+		div#main(role = "main")
+			div(id = "ribbon")
+				ol(class="breadcrumb")
+
+			div#content
+			include ./modal/modal.jade
+
+
+		//- FOOTER
+		div(class = "page-footer")
+			div.row
+				div.col-xs-12.col-sm-6
+					span(class = "txt-color-white") Avocado 1.0 
+						span(class = "hidden-xs") Web Application Framework
+						| 	© 2016
+
+		script(src = "/js/libs/jquery-2.1.1.min.js")
+		script(src = "/js/libs/jquery-ui-1.10.3.min.js")
+		//- script(src="/plugins/Ghost-Markdown-Editor/ghostdown.js")			
+		script(src = "/js/app.config.js")
+		script(src = "/js/bootstrap/bootstrap.min.js")
+		script(src = "/js/jquery.form.min.js")
+		
+		//- MAIN APP JS FILE
+		script(src = "/js/notification/SmartNotification.min.js")
+		script(src = "/js/smartwidgets/jarvis.widget.min.js")
+		script(src = "/js/plugin/fastclick/fastclick.min.js")
+		script(src = "/js/plugin/sparkline/jquery.sparkline.min.js")
+		script(src = "/js/app.min.js")
+		script(src="/js/plugin/datatables/jquery.dataTables.min.js")
+		script(src='/js/plugin/datatables/dataTables.colVis.min.js')
+		script(src="/js/selectize.js")
+		script(src="/js/plugin/datatables/dataTables.tableTools.min.js")
+		script(src="/js/plugin/datatables/dataTables.bootstrap.min.js")
+		script(src='/js/plugin/datatable-responsive/datatables.responsive.min.js')
+		script(src="/js/fontawesome-iconpicker.min.js")
+		script(src="/js/vendor/jquery.ui.widget.js")
+		script(src="/js/jquery.iframe-transport.js")
+		script(src="/js/jquery.fileupload.js")
+		script(src="/js/underscore-min.js")
+		script(src = '/js/avocado/avocadoDataTable.js')

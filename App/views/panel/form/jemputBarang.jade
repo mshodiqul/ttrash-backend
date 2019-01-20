@@ -1,0 +1,76 @@
+form.form-horizontal
+	.form-group
+		label.control-label.col-lg-3 Driver
+		div.col-lg-7
+			select.form-control#driver
+				option(value = "") Pilih
+				each d in driver
+					option(value =d._id)=d.name
+
+	.form-group
+		div.col-lg-7.col-lg-offset-3
+			button.btn.btn-primary#simpan(style = "margin-right : 10px;") Submit
+			button.btn.btn-danger#batal Batal
+
+script.
+	pageSetUp();
+
+	$(function () {
+		$('#batal').click(function (e){
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		$('#simpan').click(function (e) {
+			e.preventDefault();
+			var selector = $(this);
+			var sampah = '#{sampah}';
+			var id_driver = $('#driver').val();
+			selector.attr('disabled', true);
+			if (id_driver == "") {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> data masih kosong </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+				selector.attr('disabled', false);
+			} else {
+				var nama_driver = $('#driver option[value= "'+id_driver+'"]').text();
+				var arr = sampah.split(',');
+				var data = {
+					id_driver : id_driver,
+					nama_driver : nama_driver,
+					arr : JSON.stringify(arr)
+				}
+				$.ajax({
+					url : '/request/apaaja/jemput',
+					type : 'POST',
+					dataType : 'json',
+					data : data,
+					success : function (msg) {
+						if (msg.status == 200 ) {
+							$.smallBox({
+								content : "<i class='fa fa-clock-o'></i> <i> data berhasil di proses </i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						} else {
+							$.smallBox({
+								title : "Peringatan",
+								content : "<i class='fa fa-clock-o'></i> <i>"+msg.pesan+"</i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						$('#batal').click();
+						selector.attr('disabled',false);
+					}
+				});
+			}
+		});
+	});

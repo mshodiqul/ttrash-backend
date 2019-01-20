@@ -1,0 +1,125 @@
+extends layout
+block content
+	div.row
+		div.col-md-12
+			div.box.border-bottom-primary
+				h3 Cart
+				table.table.table-responsive.table-striped
+					thead
+						tr
+							th #
+							th Name
+							th.hidden-xs Price
+							th Qty
+							th Total
+							th
+					tbody#table-cart
+					tbody#table-footer
+				div.pull-right
+					button.btn.btn-primary#btnRemove
+						i.fa.fa-remove
+						span  REMOVE ALL
+					| &nbsp;
+					button.btn.btn-primary(onclick="checkout()")#btnCheckout
+						span CHECKOUT 
+							i.fa.fa-arrow-right
+				div.clearfix
+	script.
+		var urlSite = "item";
+		$(function() {
+			getKeranjang(function(hasil) {
+				var selector = $("#table-cart");
+				var totalHarga = 0;
+				if (hasil.length == 0) {
+					$("#btnCheckout").hide();
+					$("#btnRemove").hide();
+				}
+				hasil.forEach(function(doc, i) {
+					var element = "<tr id=" + doc.id + "><td>" + parseInt(i+1) + "</td><td>" + doc.title + "</td><td class=\"hidden-xs\" data-harga=" + doc.price + ">" + rupiah(doc.price) + "</td><td>" + doc.jumlah + "</td><td data-total=" + doc.totalHarga + ">" + rupiah(doc.totalHarga) + "</td><td><button class=\"btn-info no-border margin\" onclick=\"delCart(this)\"><i class=\"fa fa-remove\"></i></button><button class=\"btn-info no-border margin\" onclick=\"minValue(this)\"><i class=\"fa fa-minus\"></i></button></td></tr>";
+					totalHarga += doc.totalHarga;
+					selector.append(element);
+				})
+				var elementFooter = "<tr><td class=\"text-center\" colspan=\"6\">Total Price <b>" + rupiah(totalHarga) + "</b></td></tr>";
+				$("#table-footer").append(elementFooter);
+			});
+		});
+
+		function checkout() {
+			var selector = $("#table-cart tr");
+			var data = [];
+			selector.each(function() {
+				var childSelector = $(this).find("td");
+				data.push({
+					title : childSelector.eq(1).text(),
+					price : parseInt(childSelector.eq(2).attr("data-harga")),
+					qty : parseInt(childSelector.eq(3).text()),
+					total : parseInt(childSelector.eq(4).attr("data-total"))
+				})
+			})
+			console.log(data);
+		}
+
+		function totalCart() {
+			var harganya = 0;
+			$("#table-cart tr").each(function() {
+				harganya += parseInt($(this).find("td").eq(4).attr("data-total"));
+			})
+			var elementFooter = "<tr><td class=\"text-center\" colspan=\"6\">Total Price <b>" + rupiah(harganya) + "</b></td></tr>";
+			$("#table-footer").html(elementFooter);
+		}
+
+		function minValue(element) {
+			var value = parseInt($(element).closest("tr").find("td").eq(3).text());
+			var price = parseInt($(element).closest("tr").find("td").eq(2).attr("data-harga"));
+			var id = $(element).closest("tr").attr("id");
+			var title = $(element).closest("tr").find("td").eq(0).text();
+
+			var currentValue = 1;
+			var total = parseInt(value) - currentValue;
+			//- $("#cartTotal1, #cartTotal2").text(total);
+			//- $("#cartTotal1, #cartTotal2").removeClass("hidden");
+			if (total <= 0) {
+				total = 1;
+			}
+			var totalHarga = parseInt(price) * total;
+			$(element).closest("tr").find("td").eq(3).text(total);
+			$(element).closest("tr").find("td").eq(4).attr("data-total", totalHarga).text(rupiah(totalHarga));			
+
+			//- UPDATE LOCAL STORAGE
+			var cart = localStorage['cart_' + urlSite] != undefined ? JSON.parse(localStorage['cart_' + urlSite]) : [];
+			if (total > 0) {
+				for (var i = 0; i < cart.length; i++) {
+					if(id === cart[i].id){
+						if (localStorage['cart_' + urlSite]) {
+							cart[i].jumlah = cart[i].jumlah - 1;
+							if (cart[i].jumlah <= 0) {
+								cart[i].jumlah = 1;	
+							}
+						}
+						cart[i].totalHarga = cart[i].jumlah * parseInt(price);
+						break;
+					}
+				}				
+			}
+			localStorage['cart_' + urlSite] = JSON.stringify(cart);
+
+			totalCart();
+		}
+
+		function delCart(element) {
+			//- UPDATE LOCAL STORAGE
+			var id = $(element).closest("tr").attr("id");
+			var cart = localStorage['cart_' + urlSite] != undefined ? JSON.parse(localStorage['cart_' + urlSite]) : [];
+			for (var i = 0; i < cart.length; i++) {
+				if(id === cart[i].id){
+					if (localStorage['cart_' + urlSite]) {
+						cart.splice(i, 1);
+					}
+					break;
+				}
+			}
+			localStorage['cart_' + urlSite] = JSON.stringify(cart);
+			$(element).closest("tr").remove();
+
+			totalCart();
+		}

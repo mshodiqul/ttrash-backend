@@ -1,0 +1,125 @@
+extends layout
+block content
+	mixin rupiah(n)
+		- var hg = "TOTAL BAYAR Rp. "+ (n/1000).toFixed(3).replace(/(\d)(?=(\d{3})+\.)/g, "$1.");
+		h1=hg
+	//- div.row
+
+	div.row
+		div.col-md-9.col-xs-12.col-lg-9
+			div.box.border-bottom-primary
+				h3 Silahkan Bayar Sesuai Total Yang Ada di Bawah
+				br
+				each r in rekening
+					- no = "Nomer Rekening : "+r.rekening
+					- nama = "Atas Nama : "+r.title
+					- bank = "Bank : "+r.bank
+					- cabang = "Cabang : "+r.cabang
+					div.batas(style = "border : 1px solid #000; padding : 10px; margin-top : 10px;")
+						p(style = "font-size : 15px;")=no
+						p(style = "font-size : 15px;")=nama
+						p(style = "font-size : 15px;")=bank
+						p(style = "font-size : 15px;")=cabang
+
+				+rupiah(item.totalHarga)
+				p info : Total Bayar Harus Sama untuk mempercepat kami validasi data
+				br
+				br
+				br
+				- if (!confirm)
+					div#tempat-pesan
+					form.form-horizontal#addForm(method = "POST", action = "/checkout/confirm" enctype = "multipart/form-data")
+						div(class = "progress hidden")
+							div(class = "progress-bar progress-bar-success" width = "30%")
+						div.form-group
+							label.control-label.col-lg-2 Nomor Order
+							div.col-lg-3
+								input(style = "margin-left: 15px;" name = "order" type = "text" readonly value = item._id).form-control#order
+						div.form-group
+							label.control-label.col-lg-2 Bukti Pembayaran
+							div.col-lg-3
+								div#box-img
+									div.box-img(style="position:relative; width:100px; max-height:75px; margin-left: 15px;")
+										div.over-img.smart-form
+											button.btn.btn-info.btn-xs(title="Upload" type="button" onClick="uploadThumbnail(this)" style="margin-right:5px; font-size: 10px !important;")
+												i.fa.fa-upload
+											input.form-control.image(id="bukti" accept="image/*" type="file" name="bukti" style ="display :none;")
+										div.thumnail.img(style="background-image:url('/thumbnail.png');" data-poster="false")
+						div.form-group
+							div.col-lg-5
+								div.pull-right
+									button.btn.btn-primary#confirm(type = "submit")
+										span KONFIRMASI
+				- else 
+					div#tempat-pesan
+						-var pesan = "order dengan nomor "+item._id+" sudah di konfirmasi"
+						p.alert.alert-warning(style = "color : #000;")=pesan
+		
+		div.col-md-3.col-sm-12.col-xs-12
+			div#sidebar(style = "margin-top : 10px;")
+				h1.nav-category Category
+				ul.list-item
+					- if (kategori.length != 0 )
+						each k in kategori
+							li.list-sub-item
+								a(href="/kategori/"+k._id.toLowerCase())=k._id
+
+			div#sidebar
+				h1.nav-category Terakhir di beli
+				ul.list-item
+					- if (last_order.length != 0 )
+						each o in last_order
+							li.list-sub-item=o.title
+
+
+	script.
+		$(function () {
+			$('#addForm').submit(function (e){
+				e.preventDefault();
+				var selector = $("#confirm");
+				var order = $('#order').val();
+				var bukti = $('#bukti').val();
+				selector.attr('disabled', true);
+				$(".progress").removeClass("hidden");
+				if (order == "" || bukti == "") {
+					selector.attr('disabled', false);
+					$(".progress").addClass("hidden");
+					$(".progress-bar-success").removeClass("active").width("0%");
+					$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">data masih belum lengkap</p>');
+				} else {
+					$(this).ajaxSubmit({
+						uploadProgress : function(event, position, total, percentComplete) {
+							var percentTotal = percentComplete + "%";
+							$(".progress-bar-success").addClass("active").width(percentTotal);
+						},
+						success: function(data) {
+							console.log("suksses ", data);
+							setTimeout(function() {
+								$(".progress").addClass("hidden");
+								$(".progress-bar-success").removeClass("active").width("0%");
+							}, 200);
+							if (data.status == 200 ) {
+								$('#tempat-pesan').html('<p class = "alert alert-success" style = "color : #000;">konfirmasi pembayaran berhasil </p>');
+								$('form.form-horizontal').remove();
+							} else {
+								$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">'+data.pesan+'</p>');
+							}
+							selector.attr('disabled', false);
+						},
+						error: function(xhr) {
+							console.log(xhr);
+							$('#tempat-pesan').html('<p class = "alert alert-danger" style = "color : #000;">'+xhr+'</p>');
+							selector.attr('disabled', false);
+							$(".progress").addClass("hidden");
+							$(".progress-bar-success").removeClass("active").width("0%");
+						}
+					});
+				}
+				return false;
+			});
+		});
+
+		function uploadThumbnail(selector) {
+			$(selector).parent().find("#bukti").click();
+			return false;
+		}

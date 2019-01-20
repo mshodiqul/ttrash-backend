@@ -1,0 +1,171 @@
+extends index
+block content
+	article.col-lg-6(style="margin:0px auto; float:none; margin-top:5em;")
+		div.jarviswidget.jarviswidget-color-darken
+			header
+				span.widget-icon
+					i.fa.fa-check
+				h2 Startup Application
+			div
+				div.widget-body
+					div.row
+						div(id="bootstrap-wizard-1" class="col-sm-12")
+							div(class="form-bootstrapWizard")
+								ul(class="bootstrapWizard form-wizard")
+									li(class="active" data-target="#step1")
+										a(href="#tab1" data-toggle="tab")
+											span(class="step") 1
+											span(class="title") Basic information
+									li(data-target="#step2")
+										a
+											span(class="step") 2
+											span(class="title") Database
+									li(data-target="#step3")
+										a
+											span(class="step") 3
+											span(class="title") Setup
+									li(data-target="#step4")
+										a
+											span(class="step") 4
+											span(class="title") Finish
+								div.clearfix
+							div(class="tab-content")
+								div(class="tab-pane active" id="tab1")
+									br
+									h3
+										strong Step 1 
+										| - Basic Information
+
+									div(class="row")
+										form#websiteForm
+											div.col-sm-12
+												div#prosesWebsite
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-italic.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Site Name" type="text" name="website" id="website")
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-italic.fa-lg.fa-fw
+														textarea(placeholder="Site Descriptions").input-lg.form-control#description
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-italic.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Tagline" type="text" name="tagline" id="tagline")
+													//- small(style="font-size:10px") USE COMMA SEPARATOR (,) TO MULTIPLE TAGLINE
+								div(class="tab-pane" id="tab2")
+									br
+									h3
+										strong Step 2 
+										| - Database Setup
+
+									div(class="row")
+										form#databaseForm
+											div.col-sm-12
+												div#prosesDatabase
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-unlink.fa-lg.fa-fw
+														select.form-control.input-lg#driver
+															option(value="0") Select Driver
+															option(value="mongodb") MongoDB
+											div.col-sm-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-italic.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Hostname" type="text")#hostdb
+											div.col-sm-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-italic.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Port" type="number")#port
+											div.col-sm-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-user.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Username" type="text")#userdb
+											div.col-sm-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-unlock-alt.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Password" type="password")#passdb
+											div.col-sm-12
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-database.fa-lg.fa-fw
+														input.form-control.input-lg(placeholder="Database" type="text")#dbname
+								div(class="tab-pane" id="tab3")
+									br
+									h3
+										strong Step 3 
+										| - Starting Setup
+
+									div(class="row")
+										form#startSetup
+											div.col-md-12
+												div#prosesStart
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-user
+														input.form-control.input-lg(placeholder="Your Name")#name
+											div.col-md-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-user
+														input.form-control.input-lg(placeholder="Username")#username
+											div.col-md-6
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-user
+														input.form-control.input-lg(placeholder="Password" type="password")#password
+											div.col-md-12
+												div.form-group
+													div.input-group
+														span.input-group-addon
+															i.fa.fa-user
+														input.form-control.input-lg(placeholder="Your Email" type="email")#email
+											div.col-md-12
+												div(class="checkbox")
+													label
+														input(type="checkbox" class="checkbox style-0")#agree
+														span I Agree want to install Duku
+												button.btn.btn-lg.btn-success#btnSetup SETUP NOW
+								div(class="tab-pane" id="tab4")
+									br
+									h3
+										strong Step 4 
+										| - Finish
+									div.row
+										center
+											h3 Congratulation Your Website Has Been Setup
+											table.table.table-striped(width="300px")
+												tr
+													td Username
+													td#usernamenya admin
+												tr
+													td Password
+													td#passwordnya admin
+											a(href="/user/login").btn.btn-success Manage Your Site
+								div.form-actions
+									div.row
+										div.col-sm-12
+											ul.pager.wizard.no-margin
+												//- <!--<li class="previous first disabled">
+												//- li(class="previous disabled")
+												//- 	a(href="javascript:void(0);" class="btn btn-lg btn-default") Previous
+												li(class="next")
+													a(href="javascript:void(0);" onclick="btnSubmit()" class="btn btn-lg txt-color-darken") Next
+
+	script(src="/js/avocado/prosesSetup.js")

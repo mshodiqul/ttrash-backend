@@ -1,0 +1,144 @@
+style.
+	input#centang {
+		margin-top : 7.4px;
+	}
+div.row
+	article.col-xs-12.col-sm-12.col-md-12.col-lg-12
+		div.jarviswidget.jarviswidget-color-orange(data-widget-editbutton="false" , data-widget-deletebutton='false')
+			header
+				span.widget-icon
+					i.fa.fa-list
+				h2 MENU MANAGER
+			div
+				div.jarviswidget-editbox
+
+				div(class='widget-body no-padding')
+					- if (role_group != "dinas")
+						div.col-lg-12(style="padding:10px;background-color:#eee;")
+							button.btn.btn-default#add-menu(data-original-title="Create New Menu" data-placement="bottom" rel="tooltip") 
+								i.fa.fa-plus.fa-1x
+								| 		Create New Menu
+					div.row
+					div.row
+					div.col-md-6
+						div#tempat-pesan
+						select(style = 'margin-bottom : 5px;margin-top:10px;').form-control#pilih-group
+							option(value='') -- Pilih Group --
+							- for (i = 0; i < group.length; i++)
+								option(value=group[i]._id)=group[i]._id
+						div.row
+						h4.text-center Menu Administrator 
+						fieldset(style='margin : 10px') 
+							div.tree!=admin_sidebar
+script.
+	pageSetUp();
+
+	//- pilih menu berdasarkan groupnya
+	$('#pilih-group').change(function (e){
+		e.preventDefault();
+		$('#tempat-pesan').html('');
+		var id_group = $(this).val();
+		if (id_group == '') {
+			$('input[type="checkbox"]').prop('checked',false);
+		} else {
+			var data = $('ul > li');
+			//- var group = $('option[value='+id_group+']').text();
+			var group = $('option[value="'+id_group+'"]').text();
+			$.ajax({
+				url : '/manage/menu/getAccess',
+				type : 'post',
+				dataType : 'json',
+				data : { id : id_group },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						console.log(msg.pesan);
+						data.each(function (i){
+							var menu = $(this).find('label input[type="checkbox"]').attr('data-id');
+							if($.inArray(menu, msg.pesan) != -1) {
+								$(this).find('input[type="checkbox"]').prop('checked',true);
+							} else {
+								$(this).find('input[type="checkbox"]').prop('checked',false);
+							}
+						});
+					} else {
+						$('div#tempat-pesan').html('<p class = "alert alert-danger"> Menu Group '+group+' Belum Ada / Terjadi Kesalahan !! </p>');
+					}
+				}
+			});
+		}
+	});
+
+	$('input#centang').change(function (e){
+		e.preventDefault();
+		var isine  = $(this).val();
+		var id = $(this).attr('data-id');
+		var perintah = '';
+		$('#tempat-pesan').html('');
+		var id_group = $('#pilih-group').val();
+		if ($(this).is(":checked") == true) {
+			perintah = 'add';
+		} else {
+			perintah = 'hapus';
+		}
+		if (id_group == '') {
+			$('div#tempat-pesan').html('<p class = "alert alert-danger"> Group Belum di Pilih !!! </p>');
+			$(this).attr('checked',false);
+		} else {
+			//- var group = $('option[value='+id_group+']').text();
+			var group = $('option[value="'+id_group+'"]').text();
+			var data = {
+				menu_id : id,
+				menu : isine,
+				group_id : id_group,
+				group : group,
+				accessType : 'MENU',
+				perintah : perintah
+			}
+			$.ajax({
+				url : '/manage/menu/SetAccess',
+				type : 'post',
+				dataType : 'json',
+				data : data,
+				success : function (msg) {
+					if (msg == 'sukses') {
+					} else {
+						$(this).attr('checked',false);
+						$('div#tempat-pesan').html('<p class = "alert alert-danger"> Menu Gagal di Tambah / Hapus !!! </p>');
+					}
+				}
+			})
+		}
+	});
+
+	function EditMenu (id) {
+		$('.modal-admin').css('width', '');
+		$('.modal-dialog').css('width', '');
+		$('div#modal_All').modal('show');
+		$('#modal_All .modal-title p').text('Edit Menu');
+		$('div#modal_All div#kosong').html('');
+		$('div#AllModal').load('/manage/menu/edit/'+id);
+	}
+
+	$('#add-menu').click(function (){
+		$('.modal-admin').css('width', '');
+		$('.modal-dialog').css('width', '');
+		$('div#modal_All').modal('show');
+		$('#modal_All .modal-title p').text('Tambah Menu Baru');
+		$('div#modal_All div#kosong').html('');
+		$('div#AllModal').load('/manage/menu/add');
+	});
+
+	function HapusMenu (selector , id) {
+		if (confirm('apakah anda yakin ?')){
+			$.ajax({
+				url : '/manage/menu/delete',
+				type : 'post',
+				dataType : 'json',
+				data : { id : id },
+				success : function (msg){
+					$(selector).closest('li').remove();
+					//- location.reload();
+				}
+			});
+		}
+	}

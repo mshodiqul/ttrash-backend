@@ -1,0 +1,132 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 HISTORY
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						div
+							- var data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+							+component(data)
+							- if (role_group == "admin")
+								button.btn.btn-default.pull-left(id= "export" data-original-title= "Export" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") Export
+								div.col-lg-3.col-sm-3.col-xs-4
+									select#driver.form-control
+										option(value="") Pilih
+										each d in driver
+											option(value=d._id)=d.name
+								div.col-lg-3.col-sm-3.col-xs-4
+									input(type="text" class="form-control" id="start"  placeholder = "Tanggal Mulai")
+								div.col-lg-3.col-sm-3.col-xs-4
+									input(type="text" class="form-control" id="end"  placeholder = "Tanggal Selesai")
+							if (role_group != "admin")
+								div.col-lg-3.col-sm-3.col-xs-4
+									select#bankSampah.form-control
+										option(value="all") Pilih
+										each bs in bankSampah
+											option(value=bs._id)=bs.nama
+					table(id = "table-history" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Driver
+								th Type
+								th Tujuan Awal
+								th Tujuan Akhir
+								th Jarak
+								th Total
+								th created_at
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	function myPrint(url) {
+		var myPrintWindow = window.open(url, "Laporan History Driver");
+		myPrintWindow.focus();
+		myPrintWindow.print();
+		setTimeout(function (){
+			myPrintWindow.close(); 
+		},350)
+		return false;
+	}
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/history/dataTable/all';
+
+		var tablegroup = dataTable('#table-history',dataTableURL,dataTableWidth ,{ selectable : [1,2,3,4,5,6,7] });
+		
+		function refresh(){
+			tablegroup.fnDraw();
+			selected = [];
+		}
+
+		$('#bankSampah').change(function (e) {
+			e.preventDefault();
+			var isi = $(this).val();
+			var url = '/manage/history/dataTable/'+isi;
+			tablegroup = dataTable('#table-history',url,dataTableWidth ,{ selectable : [1,2,3,4,5,6,7] });
+		});
+
+		$('#export').click(function (e){
+			e.preventDefault();
+			var driver = $("#driver").val();
+			if (driver == "") {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> driver belum di pilih </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} else {
+				var start = $('#start').val();
+				var end = $("#end").val();
+				var url_cetak = "/laporan/history?driver="+driver+"&end="+end+"&start="+start;
+				console.log(url_cetak);
+				var myPrintWindow = window.open(url_cetak, "Laporan History Driver");
+				myPrintWindow.focus();
+				myPrintWindow.print();
+				setTimeout(function (){
+					myPrintWindow.close(); 
+				},350);
+			}
+		});
+
+		SelectedRow('#table-history');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$("#start").datepicker({
+			defaultDate: "+1w",
+			dateFormat: 'yy-mm-dd',
+			numberOfMonths: 1,
+			prevText: '<i class="fa fa-chevron-left"></i>',
+			nextText: '<i class="fa fa-chevron-right"></i>',
+			onClose: function (selectedDate) {
+				$("#end").datepicker("option", "minDate", selectedDate);
+			}
+		});
+		
+		$("#end").datepicker({
+			dateFormat: 'yy-mm-dd',
+			defaultDate: "+1w",
+			numberOfMonths: 1,
+			prevText: '<i class="fa fa-chevron-left"></i>',
+			nextText: '<i class="fa fa-chevron-right"></i>',
+			onClose: function (selectedDate) {
+				$("#start").datepicker("option", "maxDate", selectedDate);
+			}
+		});
+	});

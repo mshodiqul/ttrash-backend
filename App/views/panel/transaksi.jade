@@ -1,0 +1,202 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 TRANSAKSI MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						+component(data)
+
+						- if (role_group != "dinas")
+							button.btn.btn-default.pull-left(id= "bukti" data-original-title= "Lihat Bukti Pembayaran" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") 
+								i.fa.fa-1x(class= "fa fa-file")
+							button.btn.btn-default.pull-left(id= "view" data-original-title= "View" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") 
+								i.fa.fa-1x(class= "fa fa-eye")
+							button.btn.btn-default.pull-left(id= "complete" data-original-title= "Complete" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") 
+								i.fa.fa-1x(class= "fa fa-check")
+							button.btn.btn-default.pull-left(id= "cancel" data-original-title= "Cancel" data-placement="bottom" rel="tooltip" style = "margin-right : 10px;") 
+								i.fa.fa-1x(class= "fa fa-times")
+						div.col-lg-3.col-sm-3.col-xs-4
+							select#filter.form-control
+								option(value="all") -- Pilih Status --
+								option(value = "pendding") Pendding
+								option(value = "confirm") Confirm
+								option(value = "complete") Complete
+					table(id = "table-transaksi" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Nama
+								th Email
+								th Telpon
+								th Alamat
+								th Order
+								th Jumlah
+								th Total
+								th Status
+
+script.
+	pageSetUp();
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth = [{'targets':0,'width':'15px'}];
+		var dataTableURL = '/transaksi/dataTable/all';
+
+		var tableuser = dataTable('#table-transaksi',dataTableURL,dataTableWidth ,{ selectable : [1,2,3,4,5,6,7,8] });
+		
+		function refresh(){
+			tableuser.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-transaksi');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$('#filter').change(function (e){
+			e.preventDefault();
+			var isi = $(this).val();
+			var urlTable = '';
+			if (isi == '') {
+				urlTable = '/transaksi/dataTable/all';
+			} else {
+				urlTable = '/transaksi/dataTable/'+isi;
+			}
+			tableuser = dataTable('#table-transaksi',urlTable,dataTableWidth ,{ selectable : [1,2,3,4,5,6,7,8]});
+		});
+
+		$('#cancel').click(function (e) {
+			e.preventDefault();
+			$.SmartMessageBox({
+				title : "Peringatan",
+				content : "apakah anda ingin membatalkan pesanan ini ? ",
+				buttons : '[No][Yes]'
+			}, function (ButtonPressed) {
+				if (ButtonPressed === "Yes") {
+					$.ajax({
+						url : "/transaksi/cancel",
+						dataType : 'json',
+						data : { data : JSON.stringify(selected)},
+						type : 'POST',
+						success : function (msg) {
+							if (msg.status == 200 ) {
+								$.smallBox({
+									content : "<i class='fa fa-clock-o'></i> <i> proses berhasil !!!</i>",
+									color : "#659265",
+									iconSmall : "fa fa-check fa-1x fadeInRight animated",
+									timeout : 1000
+								});
+							} else {
+								$.smallBox({
+									content : "<i class='fa fa-clock-o'></i> <i> "+msg.pesan+"</i>",
+									color : "#C46A69",
+									iconSmall : "fa fa-times fa-1x fadeInRight animated",
+									timeout : 1000
+								});
+							}
+							$('#clear').click();
+						}
+					});
+				}
+			});
+		});
+
+		$('#complete').click(function (e) {
+			e.preventDefault();
+			if (selected.length == 1 ) {
+				$.SmartMessageBox({
+					title : "Peringatan",
+					content : "apakah anda yakin item ini sudah benar ?",
+					buttons : '[No][Yes]'
+				}, function (ButtonPressed) {
+					if (ButtonPressed === "Yes") {
+						$.ajax({
+							url : "/transaksi/complete",
+							dataType : 'json',
+							data : { id : selected[0]},
+							type : 'POST',
+							success : function (msg) {
+								if (msg.status == 200 ) {
+									$.smallBox({
+										content : "<i class='fa fa-clock-o'></i> <i> proses berhasil !!!</i>",
+										color : "#659265",
+										iconSmall : "fa fa-check fa-1x fadeInRight animated",
+										timeout : 1000
+									});
+								} else {
+									$.smallBox({
+										content : "<i class='fa fa-clock-o'></i> <i> "+msg.pesan+"</i>",
+										color : "#C46A69",
+										iconSmall : "fa fa-times fa-1x fadeInRight animated",
+										timeout : 1000
+									});
+								}
+								$('#clear').click();
+							}
+						});
+					}
+				});
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> Minimal Satu Data !!!</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			}
+		});
+
+		$('#bukti').click(function (e) {
+			e.preventDefault();
+			if (selected.length == 1 ) {
+				$('.modal-admin').css('width', "800");
+				$('.modal-dialog').css('width', "800");
+				$('div#modal_All').modal('show');
+				$('#modal_All .modal-title p').text("Bukti Pembayaran");
+				$('div#modal_All div#kosong').html('');
+				$('div#AllModal').load("/transaksi/bukti/"+selected[0]);
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> Minimal Satu Data !!!</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} 
+		});
+
+		$('#view').click(function (e) {
+			e.preventDefault();
+			if (selected.length == 1 ) {
+				$('.modal-admin').css('width', "800");
+				$('.modal-dialog').css('width', "800");
+				$('div#modal_All').modal('show');
+				$('#modal_All .modal-title p').text("Preview Transaksi");
+				$('div#modal_All div#kosong').html('');
+				$('div#AllModal').load("/transaksi/preview/"+selected[0]);
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> Minimal Satu Data !!!</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} 
+		});
+
+	});

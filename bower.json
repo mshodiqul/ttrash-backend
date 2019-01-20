@@ -1,0 +1,17 @@
+{
+  "name": "dukuCMS",
+  "description": "NodeJS Duku CMS , a CMS for incredible People",
+  "main": "./Core/init.js",
+  "authors": [
+    "Shodiqul Muzaki <user.creativefull@gmail.com>"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

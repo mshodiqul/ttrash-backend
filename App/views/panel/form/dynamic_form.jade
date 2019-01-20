@@ -1,0 +1,134 @@
+include ./itemType.jade
+form.form-horizontal
+	div#tempat-pesan
+	div#template-form
+		- if (type == 'tambah')
+			- for (i = 0; i < obj.length; i++)
+				- var mix = 'itemType_'+obj[i].type
+				+#{mix}(type , obj[i])
+		- else
+			- for(x = 0; x < obj.length; x++) 
+				- var mix = 'itemType_'+obj[x].type
+				+#{mix}(type , obj[x])
+
+	div.form-group
+		div.col-lg-7.col-lg-offset-3
+			button.btn.btn-info(class = tombol[type].kelas, data-id = tombol[type].id style = "margin-right : 10px;" , data-url = tombol[type].url )=tombol[type].label
+			button.btn.btn-danger#batal Batal
+
+script.
+	pageSetUp();
+
+	$(function (){
+
+		$('#batal').click(function (e){
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		function KirimData(data , url , selector ) {
+			$.ajax({
+				url : url,
+				dataType : 'json',
+				type : 'POST',
+				data : data,
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						$('#modal_All').modal('hide');
+						$('#clear').click();
+						if (msg.reload == true) {
+							 location.reload();
+						}
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger "> '+msg.pesan+'</p>');
+					}
+					$(selector).attr('disabled',false);
+					return false;
+				}
+			});
+		}
+
+		function CekField () {
+			var element = $('div#template-form div.form-group');
+			var data = [];
+			element.each(function (i){
+				var label = $(this).find('label.control-label').attr('data-label');
+				var value = $(this).find('div.col-lg-7 .form-control , input').val();
+				if (value == '' ) {
+					data.push(false);
+				} else {
+					data.push(true);
+				}
+			});
+			var status = $.inArray(false , data);
+			return status;
+		}
+
+		$('.simpan').click(function (e){
+			e.preventDefault();
+			var element = $('div#template-form div.form-group');
+			var data = {};
+			$('#tempat-pesan').html('');
+			var status = '';
+			var url = $(this).attr('data-url');
+			$(this).attr('disabled', true);
+			element.each(function (i){
+				var label = $(this).find('label.control-label').attr('data-label');
+				var value = $(this).find('div.col-lg-7 .form-control , input').val();
+				value = value;
+				if (value == '' ) {
+					status = 'tidak'
+					return $('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+				} else {
+					data[label] = value;
+					status = 'kirim'
+				}
+			});
+			var cek = CekField();
+			if (cek != -1 || status == 'tidak') {
+				$('.simpan').attr('disabled', false);
+				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+			} else {
+				//- console.log(kirim);
+				KirimData(data , url , '.simpan');
+			}
+			return false;
+		});
+
+		$('.simpan-edit').click(function (e){
+			e.preventDefault();
+			var element = $('div#template-form div.form-group');
+			var id = $(this).attr('data-id');
+			var data = {
+				id : id
+			};
+			$('#tempat-pesan').html('');
+			var status = '';
+			var url = $(this).attr('data-url');
+			$(this).attr('disabled', true);
+			element.each(function (i){
+				var label = $(this).find('label.control-label').attr('data-label');
+				var value = $(this).find('div.col-lg-7 .form-control , div.col-lg-7 input').val();
+				value = value;
+				if (value == '' && label != undefined) {
+					status = 'tidak';
+					return $('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+				} else {
+					data[label] = value;
+					status = 'kirim'
+				}
+			});
+			var cek = CekField();
+			console.log(cek);
+			if (cek != -1 || status == 'tidak') {
+				console.log('valid !!!');
+				$('.simpan-edit').attr('disabled', false);
+				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+			} else {
+				//- console.log(data)
+				KirimData(data , url , '.simpan-edit');
+			}
+			return false;
+		})
+	});

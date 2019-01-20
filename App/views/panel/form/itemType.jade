@@ -1,0 +1,177 @@
+mixin itemType_icon(type, obj)
+	div.form-group
+		label(data-label = obj.id).control-label.col-lg-3=obj.label
+		div.col-lg-7
+			- if (type == 'tambah')
+				div.input-group
+					input(data-placement="bottomRight" class="form-control icp icp-auto" value="fa-archive" type="text")
+					span(class="input-group-addon")
+			- else
+				div.input-group
+					input(data-placement="bottomRight" value = obj.value class="form-control icp icp-auto" type="text")
+					span(class="input-group-addon")
+	script.
+		pageSetUp();
+		$('.icp-auto').iconpicker({
+			hideOnSelect: true
+		});
+mixin itemType_area(type , obj)
+	div.form-group
+		label(data-label = obj.id ).control-label.col-lg-3=obj.label
+		div.col-lg-7
+			- if (type == 'tambah')
+				//- input.form-control(type = obj.type , id = obj.id )
+				textarea.form-control(cols = '4', row = '5' , id = obj.id )
+			- else
+				textarea.form-control(cols = '4', row = '5' , id = obj.id )=obj.value
+				//- input.form-control(type = obj.type , id = obj.id , value = obj.value)
+
+mixin itemType_datalist(type, obj)
+	div.form-group
+		label(data-label = obj.id ).control-label.col-lg-3=obj.label
+		div.col-lg-7
+			- if (type == 'tambah')
+				input.form-control(type = obj.type , id = obj.id list = "list-" + obj.id autocomplete='off')
+				datalist(id="list-" + obj.id)
+					each list in obj.data
+						option(value=list)
+			- else 
+				input.form-control(type = obj.type , id = obj.id list = "list-" + obj.id autocomplete='off' value = obj.value)
+				datalist(id="list-" + obj.id)
+					each list in obj.data
+						option(value=list)= list
+
+mixin itemType_select(type , obj)
+	div.form-group
+		label.control-label.col-lg-3(data-label = obj.id )=obj.label
+		div.col-lg-7
+			select.form-control(id = obj.id)!=obj.element
+
+mixin itemType_text(type , obj)
+	div.form-group
+		label(data-label = obj.id ).control-label.col-lg-3=obj.label
+		div.col-lg-7
+			- if (type == 'tambah')
+				input.form-control(type = obj.type , id = obj.id )
+			- else 
+				input.form-control(type = obj.type , id = obj.id , value = obj.value)
+
+mixin itemType_geometry_point(type, obj)
+	span= type
+
+mixin itemType_list(type , obj)
+	div.form-group
+		label.control-label.col-lg-3(data-urladd = obj.url_add data-urlremove = obj.url_remove)=obj.label
+		div.col-lg-7!=obj.mylist
+			div.input-group!=obj.listgroup
+	script.
+		pageSetUp();
+		function removeList(id_arg , id_list , selector) {
+			var url = $(selector).closest('div.form-group').find('label').attr('data-urlremove');
+			console.log(url)
+			console.log(selector)
+			$.ajax({
+				url : url,
+				type : 'POST',
+				dataType : 'json',
+				data : { id_arg : id_arg , id_list : id_list },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						$('#template-form ul li#'+id_list).remove();
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger "> '+msg.pesan+' </p>');
+					}
+				}
+			})
+		}
+		
+		$('.remove_list').click(function (e){
+			e.preventDefault();
+			var id_arg = $('#add-list').children().attr('id');
+			var id_list = $(this).parent().attr('id')
+			var url = $('#add-list').closest('div.form-group').find('label').attr('data-urlremove');
+			console.log(id_arg);
+			console.log(id_list);
+			$.ajax({
+				url : url,
+				type : 'POST',
+				dataType : 'json',
+				data : { id_arg : id_arg , id_list : id_list },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+						$('#template-form ul li#'+id_list).remove();
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger "> '+msg.pesan+' </p>');
+					}
+				}
+			});
+			return false;
+		});
+
+		$('#add-list').click(function (e){
+			e.preventDefault();
+			$('#tempat-pesan').html('');
+			var url = $(this).closest('div.form-group').find('label').attr('data-urladd');
+			var id_arg = $(this).children().attr('id');
+			var id_list = $('div#template-form select.form-control').val();
+			var nama_list = $('div#template-form select.form-control').find("option:selected").text();
+			var arr_list = [];
+			var data = $('div#template-form ul.list-group li ');
+			data.each(function (i){
+				arr_list.push($(this).attr('id'));
+			});
+			var index = $.inArray(id_list , arr_list);
+			if ( index == -1 && id_arg != '' && id_list != '') {
+				//- console.log(url)
+				$.ajax({
+					url : url,
+					dataType : 'json',
+					type : 'POST',
+					data : { id_arg : id_arg , id_list : id_list },
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							var element = '<li class = "list-group-item" id = '+id_list+'>'+nama_list+'<a style = "cursor : pointer;" onclick = "removeList(\''+id_arg+'\',\''+id_list+'\',\'#add-list\')" class = "pull-right remove_list"><i class = "fa fa-trash-o"></a></a></li>';
+							$('#template-form ul.list-group').append(element)
+						} else {
+							$('#tempat-pesan').html('<p class = "alert alert-danger "> '+msg.pesan+' </p>');
+						}
+					}
+				});
+			} else {
+				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Sudah Ada atau Belum di Pilih !!! </p>');
+			}
+		});
+
+mixin itemType_password(type , obj)
+	div.form-group
+		label(data-label = obj.id ).control-label.col-lg-3=obj.label
+		div.col-lg-7
+			- if (type == 'tambah')
+				input.form-control(type = obj.type , id = obj.id )
+			- else 
+				input.form-control(type = obj.type , id = obj.id , value = obj.value)
+
+mixin itemType_checkbox(type , obj)
+	div.form-group
+		label.col-lg-3.control-label(data-label = obj.id)=obj.label
+		div.checkbox.col-lg-7
+			label
+				- if (obj.value == 1)
+					input(type = 'checkbox', value = '1' onChange = "ChangeCheckbox(this)" , name = "checkbox" , checked = 'checked')
+					i
+					| Aktif
+				- else 
+					input(type = 'checkbox', value = '0' , onChange = "ChangeCheckbox(this)" name = "checkbox")
+					i
+					| Aktif
+	script.
+		pageSetUp();
+
+		function ChangeCheckbox(selector) {
+			var status = $(selector).is(':checked');
+			if (status) {
+				$(selector).val('1')
+			} else {
+				$(selector).val('0')
+			}
+		}

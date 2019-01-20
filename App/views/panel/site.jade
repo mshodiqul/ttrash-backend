@@ -1,0 +1,199 @@
+include ./component.jade
+div.row
+	article(class = "col-md-6")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 SITE MANAGER
+			div
+				div(class = "jarviswidget-editbox")
+				div(class = "widget-body no-padding")
+					div#tempat-pesan(style = "margin : 5px;")
+					form.form-horizontal(style = "margin-top : 10px; margin-left : 20px;")
+						div.form-group
+							label.control-label.col-lg-3(for='name') Name Site
+							div.col-lg-7
+								input.form-control(type = 'text', id="name", value=hasil.site_name, disabled="disabled")
+						div.form-group
+							label.control-label.col-lg-3(for='des') Description Site
+							div.col-lg-7
+								textarea.form-control(style="height: 100px;", disabled='disabled', id='desc')= hasil.description
+						div.form-group
+							label.control-label.col-lg-3 Tagline
+							div.col-lg-7
+								div#list-tag
+									- if (hasil != undefined)
+										- if (hasil.tagline.length != 0 )
+											- for (t = 0; t  < hasil.tagline.length; t++)
+												div.input-group(style = "margin-bottom : 5px;")
+													input.form-control(value = hasil.tagline[t] type = "text")
+													span(style = "cursor : pointer;" onclick = "RemoveTag(this)").input-group-addon
+														i.fa.fa-trash-o
+								div.input-group(style = "margin-top : 15px;")
+									input.form-control(type='text', disabled = 'disabled' , id='tagline')
+									span(style = "cursor : pointer;" , onclick = "AddTag(this,'#list-tag')" ).input-group-addon
+										i.fa.fa-plus
+						div.form-group
+							label.control-label.col-lg-3 Admin
+							div.col-lg-7
+								ul.list-group#list-admin
+									- if (hasil != undefined)
+										- if (hasil.admin.length != 0)
+											- for (i = 0; i < hasil.admin.length; i++)
+												li.list-group-item=hasil.admin[i]
+													a(style = "cursor : pointer;" class = "pull-right" onclick = "removeList(this)")
+														i.fa.fa-trash-o
+								div.input-group
+									select.form-control(disabled = 'disabled')
+										option(value = '') --- Choose Admin ---
+										- if (user.length != 0 )
+											- for (x = 0; x < user.length; x++)
+												option(value = user[x]._id)= user[x]._id
+									span(style="cursor:pointer;" class = "input-group-addon"  onclick = "AddList(this,'#list-admin')")
+										i.fa.fa-plus
+						div.form-group
+							label.control-label.col-lg-3 Point
+							div.col-lg-7
+								input.form-control(type="text" placeholder="Point" value=hasil.point disabled)#point
+						div.form-group
+							label.control-label.col-lg-3 Fee
+							div.col-lg-7
+								div.input-group(style = "margin-bottom : 5px;")
+									input.form-control(type="text" placeholder="Fee" value=hasil.fee disabled)#fee
+									span.input-group-addon %
+						div.form-group
+							label.control-label.col-lg-3 Harga Per Kilo
+							div.col-lg-7
+								input.form-control(type="text" placeholder="Harga Per Kilo" value=hasil.harga disabled)#harga
+						- if (role_group != "dinas")
+							div.form-group
+									label.control-label.col-lg-3
+									div.col-lg-7
+										button.btn.btn-primary(data="edit")#proses-i Edit
+
+script.
+	pageSetUp();
+
+	function removeList(selector) {
+		$(selector).parent().remove();
+	}
+
+	function RemoveTag(selector) {
+		$(selector).closest('.input-group').remove()
+	}
+
+	function AddTag(selector , target) {
+		$('#tempat-pesan').html('');
+		var value = $(selector).prev().val();
+		if (value != '') {
+			var element = '<div style = "margin-bottom : 5px;" class = "input-group"><input class = "form-control" type = "text" value = '+value+'><span class = "input-group-addon" style = "cursor : pointer;"><i class = "fa fa-trash-o" onclick = "RemoveTag(this)"></a></span></div>';
+			$('div'+target).append(element);	
+			$(selector).prev().val('').focus();
+		} else {
+			$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Kosong !!! </p>');
+		}
+	}
+
+	function AddList (selector , target) {
+		$('#tempat-pesan').html('');
+		var arg = $(selector).prev().val();
+		var arr_list = [];
+		var data = $(selector).closest('div.form-group').find('ul.list-group li');
+		data.each(function (i){
+			arr_list.push($(this).text());
+		});
+		var index = $.inArray(arg , arr_list);
+		if ( index == -1 && arg != '' ) {
+			var element = '<li class = "list-group-item">'+arg+'<a style = "cursor : pointer;" class = "pull-right" onclick = "removeList(this)"><i class = "fa fa-trash-o"></a></a></li>';
+			$('ul.list-group'+target).append(element);
+		} else {
+			$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Sudah Ada atau Belum di Pilih !!! </p>');
+		}
+	}
+
+	$(function (){
+
+		$(document).delegate("#proses-i[data='edit']", "click", function(e) {
+			e.preventDefault();
+			$('#tempat-pesan').html('');
+			var name = $("#name");
+			var desc = $("#desc");
+			var point = $("#point");
+			var harga = $("#harga");
+			var fee = $("#fee");
+			//- var reSiteKey = $("#reSiteKey");
+			//- var reSecretKey = $("#reSecretKey");
+
+			name.removeAttr("disabled");
+			$('select').removeAttr('disabled');
+			$('input[type = "text"]').removeAttr('disabled');
+			desc.removeAttr("disabled");
+			point.removeAttr('disabled');
+			harga.removeAttr('disabled');
+			fee.removeAttr('disabled');
+			name.focus();
+			$(this).text("Simpan");
+			name.focus();
+			$(this).removeAttr("data");
+			$(this).attr("data","save");	
+		});
+
+		$(document).delegate("#proses-i[data='save']", "click", function(e) {
+			e.preventDefault();
+			$(this).attr('disabled',true);
+			$('#tempat-pesan').html('');
+			var name = $("#name");
+			var desc = $("#desc");
+			var point = $("#point");
+			var harga = $("#harga");
+			var fee = $("#fee");
+			//- var reSiteKey = $("#reSiteKey");
+			//- var reSecretKey = $("#reSecretKey");
+			var list_tag = [];
+			var list_admin = [];
+			
+			$('div#list-tag div.input-group').each(function (i){
+				list_tag.push($(this).find('input[type="text"]').val());
+			});
+
+			$('ul.list-group#list-admin li').each(function (i){
+				list_admin.push($(this).text());
+			});
+
+			var data = {
+				name : name.val(),
+				desc : desc.val(),
+				point : point.val(),
+				harga : harga.val(),
+				fee : fee.val(),
+				tagline : list_tag,
+				admin : list_admin
+			}
+			$.ajax({
+				url : '/manage/site/simpan',
+				dataType : 'json',
+				type : 'POST',
+				data : { data : JSON.stringify(data)},
+				success : function (msg) {
+					if (msg == 'sukses') {
+						name.attr("disabled","disabled");
+						$('select').attr('disabled', 'disabled');
+						$('select').val('');
+						$('input[type = "text"]').attr('disabled', 'disabled');
+						desc.attr("disabled", "disabled");
+						point.attr("disabled", "disabled");
+						harga.attr("disabled", "disabled");
+						fee.attr("disabled", "disabled");
+						$("#proses-i").text("Edit");
+						$("#proses-i").attr("disabled",false);
+						$("#proses-i").removeAttr("data");
+						$("#proses-i").attr("data","edit");
+					} else {
+						$('#tempat-pesan').html('<p class = "alert alert-danger "> Proses Gagal!!! </p>');
+					}
+				}
+			})
+			return false;
+		});
+	});

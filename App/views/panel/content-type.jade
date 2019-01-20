@@ -1,0 +1,50 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-6")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-users")
+				h2 CONTENT TYPE MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ onclick : 'DataTableAdd("/manage/content-type/add","Tambah Content Type Baru","800")' , title : 'Create New Content Type' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'},{ onclick : 'DataTableEdit("/manage/content-type/edit","Edit Content Type")' , title : 'Edit Content Type' , kelas : 'fa-pencil'} , {url : '/manage/content-type/delete' , onclick : 'DataTableDelete("/manage/content-type/delete")', title : 'Delete Content Type' , kelas : 'fa-trash-o'}]
+						+component(data)
+					table(id = "table-content-type" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')    
+								th Name
+								th(data-hide='phone,tablet') Created_at
+								//- th(data-hide='phone,tablet') Updated_at
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/content-type/dataTable';
+
+		var tablecontentType = dataTable('#table-content-type',dataTableURL,dataTableWidth ,{ selectable : [1,2] });
+		
+		function refresh(){
+			tablecontentType.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-content-type');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+	});

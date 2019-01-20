@@ -1,0 +1,10 @@
+{
+	"dev" : {
+		"plugins" : ["passport","menu","datatable","mailler","customArray"],
+		"features" : ["getArray","logger","validasi","generate","attach","file","userLog","mailer","statistik","token"]
+	},
+	"production" : {
+		"plugins" : ["passport","menu","datatable","mailler","customArray"],
+		"features" : ["getArray","logger","validasi","generate","attach","file","userLog","mailer","statistik","token"]
+	}
+}

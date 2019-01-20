@@ -1,0 +1,7 @@
+div.row
+	- for (i = 0; i < data.length; i++)
+		div.col-lg-2.col-md-3.col-sm-4.col-xs-6
+			a.btn.btn-default.content-items(href = 'main#/content/'+data[i].nama)
+				i.fa.fa-5x(class = data[i].icon)
+				p
+					b=data[i].nama.toUpperCase()

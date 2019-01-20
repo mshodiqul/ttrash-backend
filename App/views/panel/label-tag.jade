@@ -1,0 +1,81 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-user")
+				h2 LABEL TAG MANAGER
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group == "dinas")
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{onclick : 'DataTableAdd("/manage/label-tag/add","Tambah Tag Baru")' , title : 'Tambah Tag Baru' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'},{ onclick : 'DataTableDelete("/manage/label-tag/delete")', title : 'Delete Tag' , kelas : 'fa-trash-o'}]
+						+component(data)
+						div.col-lg-3.pull-right
+							span= label
+							select.form-control#list-label
+								option(value = "all" ) Choose Label
+								if label
+									each l in label
+										option(value = l.label)=l.label
+					table(id = "table-tag" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Tag
+								th Label
+script.
+	pageSetUp();
+	var selected = [];
+	var tabletag;
+	
+	function UpdateLabel() {
+		$.ajax({
+			url : '/manage/label-tag/cekLabel',
+			type : 'POST',
+			dataType : 'json',
+			success : function (msg) {
+				if (msg.status == 'sukses') {
+					var element_label = '<option value = "all"> Choose Label </option>';
+					msg.data.forEach(function (l){
+						element_label+='<option value = \''+l.label+'\'>'+l.label+'</option>';
+					});
+					$('select#list-label').html(element_label);
+				}
+			}
+		});
+	}
+
+	$(function (){
+
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/label-tag/dataTable/all';
+
+		tabletag = dataTable('#table-tag',dataTableURL,dataTableWidth ,{ selectable : [1,2] });
+		
+		function refresh(){
+			tabletag.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-tag');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$('#list-label').change(function (e){
+			e.preventDefault();
+			var value = $(this).val();
+			var urlTable = '/manage/label-tag/dataTable/'+value;
+			tabletag = dataTable('#table-tag',urlTable,dataTableWidth ,{ selectable : [1,2] });
+		});
+	});

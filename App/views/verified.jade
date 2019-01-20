@@ -1,0 +1,14 @@
+html
+	head
+
+	body
+
+		div.container
+			div.row
+				div.col.s12.m6.offset-m3(style="background-color:#171717")
+					center
+						- if (verified == true)
+							h4(style="color:#FFF") YOUR ACCOUNT HAS BEEN VERIFIED
+							h5(style="color:#FFF") Thanks for using bangsam
+						- else 
+							h4(style="color:#FFF") ACCESS TOKEN NOT VALID

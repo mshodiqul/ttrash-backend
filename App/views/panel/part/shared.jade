@@ -1,0 +1,34 @@
+mixin toolbox(objects)
+	div(style="background-color:#EFEFEF; padding: 10px" class="col-md-12")
+		each object in objects
+			a(href=object.url || 'javascript:void(0)', class="btn btn-default" id=object.id)
+				i.fa(class=object.icon) 
+				| &nbsp;
+				span= object.title
+			| &nbsp;
+
+mixin datatableJS
+	script.
+		loadScript("/js/plugin/datatables/jquery.dataTables.min.js", function(){
+			loadScript("/js/plugin/datatables/dataTables.colVis.min.js", function(){
+				loadScript("/js/plugin/datatables/dataTables.tableTools.min.js", function(){
+					loadScript("/js/plugin/datatables/dataTables.bootstrap.min.js", function(){
+						loadScript("/js/plugin/datatable-responsive/datatables.responsive.min.js", function() {
+							//- loadScript("/js/datatable-custom.js", pagefunction);
+						})
+					});
+				});
+			});
+		});
+
+mixin modal(options)
+	div.modal.fade#remoteModal
+		div.modal-dialog
+			div.modal-content
+				if options.header
+					div.modal-header
+						if options.header.closeable
+							button(type="button" data-dismiss="modal").close
+								span &times;
+						h4.modal-title= options.header.title
+				div.modal-body

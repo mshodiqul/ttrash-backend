@@ -1,0 +1,47 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-book")
+				h2 ERROR LOGS
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						+component(data)
+					table(id = "table-error" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th(data-hide="phone,tablet") Url
+								th Message
+								th(data-hide='phone,tablet') Date
+script.
+	pageSetUp();
+
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth=[{'targets':0,'width':'15px'}];
+		var dataTableURL = '/manage/logs/error/dataTable';
+		var orderBy = [[3,'desc']];
+
+		var tablegroup = dataTable('#table-error',dataTableURL,dataTableWidth ,{ selectable : [1,2,3] , orderBy});
+		
+		function refresh(){
+			tablegroup.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-error');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+	});

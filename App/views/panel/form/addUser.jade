@@ -1,0 +1,91 @@
+form.form-horizontal
+	.form-group
+		label.control-label.col-lg-3 Nama
+		div.col-lg-7
+			input.form-control#nama
+	.form-group
+		label.control-label.col-lg-3 Profesi
+		div.col-lg-7
+			input.form-control#profesi
+	.form-group
+		label.control-label.col-lg-3 No. Telp
+		div.col-lg-7
+			input.form-control#hp
+	.form-group
+		label.control-label.col-lg-3 Email
+		div.col-lg-7
+			input.form-control#email
+	.form-group
+		label.control-label.col-lg-3 Password
+		div.col-lg-7
+			input.form-control#password(type = 'password')
+	.form-group
+		div.col-lg-7.col-lg-offset-3
+			button.btn.btn-primary#simpan(style = "margin-right : 10px;") Simpan
+			button.btn.btn-danger#batal Batal
+
+script.
+	pageSetUp()
+
+	$(function () {
+		$('#batal').click(function (e){
+			e.preventDefault();
+			$('#modal_All').modal('hide');
+			$('#clear').click();
+		});
+
+		$('#simpan').click(function (e){
+			e.preventDefault();
+			var selector = $(this);
+			var nama = $('#nama').val();
+			var profesi = $('#profesi').val();
+			var hp = $('#hp').val();
+			var email = $('#email').val();
+			var password = $('#password').val();
+			selector.attr('disabled', true);
+			if (nama == "" || profesi == "" || hp == "" || password == "") {
+				selector.attr('disabled', false);
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> data masih ada yang kosong </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			} else {
+				var data = {
+					nama : nama,
+					profesi : profesi,
+					hp : hp,
+					password : password,
+				}
+				$.ajax({
+					url : '/manage/user/simpan',
+					type : 'POST',
+					dataType : 'json',
+					data : data,
+					success : function (msg) {
+						if (msg.status == 200 ) {
+							$.smallBox({
+								content : "<i class='fa fa-clock-o'></i> <i> " + msg.pesan + " !!!</i>",
+								color : "#659265",
+								iconSmall : "fa fa-check fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+							$('#batal').click();
+						} else {
+							$.smallBox({
+								title : "Peringatan",
+								content : "<i class='fa fa-clock-o'></i> <i>"+msg.pesan+"</i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+						selector.attr('disabled', false);
+					}
+				})
+			}
+		})
+	});
+	

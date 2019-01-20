@@ -1,0 +1,75 @@
+include ./component.jade
+div.row
+	article(class = "col-sm-12 col-md-12 col-lg-12")
+		div(class = "jarviswidget jarviswidget-color-blueDark" id = "wid-id-3" data-widget-colorbutton = "false" data-widget-editbutton = "false" data-widget-custombutton = "false")
+			header
+				span(class = "widget-icon")
+					i(class = "fa fa-list")
+				h2 MASTER HARGA
+
+			div
+				div(class = "jarviswidget-editbox")
+
+				div(class = "widget-body no-padding")
+					div.col-lg-12(style="padding:10px;background-color:#eee;")
+						- var data = []
+						- if (role_group != "admin") 
+							- data = [{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'}]
+						- else 
+							- data = [{ onclick : 'DataTableAdd("/manage/harga/add","Tambah Harga Baru")' , title : 'Tambah Harga Baru' , kelas : 'fa-plus'},{ID : 'clear' , title : 'Reset & Refresh' , kelas : 'fa-refresh'},{ onclick : 'DataTableEdit("/manage/harga/edit","Edit Harga")' , title : 'Edit Harga' , kelas : 'fa-pencil'} , {onclick : 'DataTableDelete("/manage/harga/delete")', title : 'Delete Harga' , kelas : 'fa-trash-o'}]
+						+component(data)
+						- if (role_group != "admin")
+							div.col-lg-3.col-sm-3.col-xs-4
+								select#bankSampah.form-control
+									option(value="all") Pilih
+									each bs in BankSampah
+										option(value=bs._id)=bs.nama
+					table(id = "table-harga" class = "table table-striped table-bordered table-hover" width = "100%")
+						thead
+							tr
+								th(data-class='expand')
+								th Nama
+								th(data-hide = 'phone,tablet') Harga
+
+script.
+	pageSetUp();
+	var selected = [];
+
+	$(function (){
+		var dataTableWidth = [{'targets':0,'width':'15px'}];
+		let role_group = "#{role_group}";
+		let id_bankSampah = "#{id_bankSampah}";
+		var dataTableURL = "";
+		if (role_group == "admin") {
+			dataTableURL = '/manage/harga/dataTable/'+id_bankSampah;
+		} else {
+			dataTableURL = '/manage/harga/dataTable/all';
+		} 
+
+		var tableuser = dataTable('#table-harga',dataTableURL,dataTableWidth ,{ selectable : [1,2] });
+		
+		function refresh(){
+			tableuser.fnDraw();
+			selected = [];
+		}
+
+		$('#bankSampah').change(function (e) {
+			e.preventDefault();
+			var isi = $(this).val();
+			var url = "";
+			if (isi == "all") {
+				url = '/manage/harga/dataTable/all';
+			} else {
+				url = '/manage/harga/dataTable/'+isi;
+			}
+			tableuser = dataTable('#table-harga',url,dataTableWidth ,{ selectable : [1,2] });
+		});
+
+		SelectedRow('#table-harga');
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		})
+
+	});

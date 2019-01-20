@@ -1,0 +1,212 @@
+section#widget-grid(data-idtype = id_type data-type = type data-refs = field_refs data-iditem = id_field)
+	div.row
+		article.col-xs-12.col-sm-12.col-md-12.col-lg-12
+			div.jarviswidget.jarviswidget-color-darken(data-widget-editbutton="false", data-widget-refresh='10', data-widget-deletebutton='false')
+				header
+					span.widget-icon
+						i.fa.fa-table
+					- var title = type+' items'
+					h2=title.toUpperCase()
+				div
+					div(class='widget-body no-padding')
+						div.col-lg-12(style="padding:10px;background-color:#eee;")
+							- if (role_group != "dinas")
+								- var url_add = '/main#/content/'+type+'/add';
+								- var url_edit = '/main#/content/'+type+'/edit';
+								- if (cek_parent == 'ada' && id_field != undefined )
+									- url_add = '/main#/content/'+type+'/'+id_field+'/add';
+									- url_edit = '/main#/content/'+type+'/'+id_field+'/edit';
+								- if (cek_parent == 'ada')
+									- var url_parent = '/main#/content/'+obj_parent.nama
+									a.btn.btn-default(data-original-title= 'Back Window' data-placement="bottom" rel="tooltip" style = "margin-right : 10px;" href = url_parent)
+										i.fa.fa-1x.fa-arrow-left
+									//- a.btn.btn-default(data-original-title= 'All Item' data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									//- 	i.fa.fa-1x.fa-arrow-up
+								a.btn.btn-default(href = url_add data-original-title= 'Tambah Item '+ type + ' Baru'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									i.fa.fa-1x.fa-plus
+								button.btn.btn-default(data-url = url_edit id = "edit" data-original-title= 'Edit Item '+ type  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									i.fa.fa-1x.fa-pencil
+								button.btn.btn-default#clear(data-original-title= 'Reset & Refresh'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									i.fa.fa-1x.fa-refresh
+								button.btn.btn-default#delete-item(data-original-title= 'Hapus Item'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									i.fa.fa-1x.fa-trash-o
+								- if (cek_child == 'ada')
+									each child in TypeSub
+										button.btn.btn-default.pull-right(data-original-title = child.nama  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;vertical-align : middle;" onclick = "TombolRefs(this,\""+child.refs+"\",\""+child.nama+"\")")
+											i(class = "fa fa-2x "+child.icon style = "margin-right : 5px;")
+											span()=child.nama.toUpperCase()
+							- else
+								button.btn.btn-default#clear(data-original-title= 'Reset & Refresh'  data-placement="bottom" rel="tooltip" style = "margin-right : 10px;")
+									i.fa.fa-1x.fa-refresh
+						table.table.table-bordered.table-hover.table-striped#table-item
+							thead
+								tr
+									th(data-class='expand')
+									th TITLE
+									-for (i =0 ; i < visibleColumn.length; i++)
+										th= visibleColumn[i].label.toUpperCase()
+									th(data-hide='phone,tablet') CREATED
+									th(data-hide='phone,tablet') UPDATED
+									th(data-hide='phone,tablet') AUTHOR
+									th(data-hide='phone,tablet') STATUS
+script.
+	pageSetUp();
+	var selected = [];
+
+	function TombolRefs(selector , data_refs , type_sub) {
+		if (selected.length == 1) {
+			$(selector).attr('disabled', true);
+			$.ajax({
+				url : '/item/getField',
+				type : 'POST',
+				dataType : 'json',
+				data : { id_item : selected[0] , field_refs : data_refs },
+				success : function (msg) {
+					if (msg.status == 'sukses') {
+							var url = '/main#/content/'+type_sub+'/'+msg.data;
+							window.location = url;
+					} else {
+						$.smallBox({
+							title : "Peringatan",
+							content : "<i class='fa fa-clock-o'></i> <i> Item Not Found !!!</i>",
+							color : "#C46A69",
+							iconSmall : "fa fa-times fa-1x fadeInRight animated",
+							timeout : 1000
+						});
+					}
+					$(selector).attr('disabled', false);
+				}
+			})
+		} else {
+			$.smallBox({
+				title : "Peringatan",
+				content : "<i class='fa fa-clock-o'></i> <i> Minimal Satu Data !!!</i>",
+				color : "#C46A69",
+				iconSmall : "fa fa-times fa-1x fadeInRight animated",
+				timeout : 1000
+			});
+		}
+	}
+
+	$(function (){
+		var type = '#{type}';
+		var id_field = '#{id_field}';
+		var field_refs = '#{field_refs}';
+		var id_type = $('section#widget-grid').attr('data-idtype');
+		//- var type = $('section#widget-grid').attr('data-type');
+		
+		var dataTableWidth = [{'targets':0,'width':'15px'}];
+		var dataTableURL = '';
+		if ('#{cek_parent}' != 'ada') {
+			dataTableURL = '/content/dataTable/parent/'+id_type+"/"+type;
+		} else {
+			dataTableURL = '/content/dataTable/'+id_type+'/'+id_field;
+		}
+
+		var rows = [];
+		$('table#table-item thead tr th').each(function (i){
+			rows.push(i);
+		});
+		var orderBy = [[rows.length - 4,'desc']];
+		rows.splice(0,1);
+		var column_status = rows.length;
+		var tableitem = dataTable('#table-item',dataTableURL,dataTableWidth ,{ selectable : rows , orderBy : orderBy , statusPublish : column_status });
+
+		function refresh(){
+			tableitem.fnDraw();
+			selected = [];
+		}
+
+		SelectedRow('#table-item');
+
+		$('#edit').click(function (e){
+			e.preventDefault();
+			if (selected.length == 1) {
+				var url = $(this).attr('data-url');
+				window.location.href = url+'/'+selected[0];
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> Minimal Satu Data !!!</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			}
+		});
+
+		$('#clear').click(function (e){
+			e.preventDefault();
+			refresh();
+		});
+
+		$('#delete-item').click(function (e){
+			e.preventDefault();
+			if (selected.length != 0 ) {
+				$.SmartMessageBox({
+					title : "Warning !!!",
+					content : "Are You Sure ? You Want to Delete This Item",
+					buttons : '[No][Yes]'
+				}, function (ButtonPressed) {
+					if (ButtonPressed === "Yes") {
+						var kirim = {
+							id : selected
+						}
+						$.ajax({
+							url : '/content/delete-item',
+							type : 'POST',
+							dataType : 'json',
+							data : {data  : JSON.stringify(kirim) },
+							success : function (msg) {
+								refresh();
+							}
+						})
+					} else {
+						$('#clear').click();
+					}
+				});
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-clock-o'></i> <i> Data Masih Kosong !!!</i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			}
+		});
+
+		$('#watch-item').click(function (e){
+			e.preventDefault();
+			if (selected.length == 1) {
+				$.ajax({
+					url : '/item/getFilm',
+					type : 'POST',
+					dataType : 'json',
+					data : { id : selected[0] },
+					success : function (msg) {
+						if (msg.status == 'sukses') {
+							window.open(msg.link,'_blank');
+						} else {
+							$.smallBox({
+								title : "Peringatan",
+								content : "<i class='fa fa-times'></i> <i> item tidak di temukan !!! </i>",
+								color : "#C46A69",
+								iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+								timeout : 1000
+							});
+						}
+					}
+				});
+			} else {
+				$.smallBox({
+					title : "Peringatan",
+					content : "<i class='fa fa-times'></i> <i> pilih satu data !!! </i>",
+					color : "#C46A69",
+					iconSmall : "fa fa-times  fa-1x fadeInRight animated",
+					timeout : 1000
+				});
+			}
+		})
+
+	});
