@@ -43,6 +43,7 @@ module.exports = exports = function(app, io) {
 	app.post('/api/order/selesai', User.checkToken, Order.selesaiOrder);
 	app.post('/api/order/cancel', User.checkToken , Order.cancelOrder);
 	app.post('/api/order/selesaiSampah', User.checkToken, Order.selesaiOrderSampah);
+	app.post('/api/order/estSampah', Order.estSampah);
 
 	// CONTENT
 	// app.get('/api/content/rekening', Content.getRekening);
