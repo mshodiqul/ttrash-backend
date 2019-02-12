@@ -77,16 +77,16 @@ script.
 				var label = $(this).find('label.control-label').attr('data-label');
 				var value = $(this).find('div.col-lg-7 .form-control , input').val();
 				value = value;
-				if (value == '' ) {
-					status = 'tidak'
-					return $('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
-				} else {
+				//- if (value == '' ) {
+				//- 	status = 'tidak'
+				//- 	return $('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
+				//- } else {
 					data[label] = value;
 					status = 'kirim'
-				}
+				//- }
 			});
 			var cek = CekField();
-			if (cek != -1 || status == 'tidak') {
+			if (status == 'tidak') {
 				$('.simpan').attr('disabled', false);
 				$('#tempat-pesan').html('<p class = "alert alert-danger "> Data Masih Ada Yang Kosong !!! </p>');
 			} else {

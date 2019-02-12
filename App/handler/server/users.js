@@ -102,10 +102,12 @@ function UserHandler () {
 	this.TambahBaru = function (req , res , next ) {
 		const userLogin = req.user;
 		const role_group = userLogin.role_group[0];
+		console.log(userLogin.role_group)
+
 		async.parallel([
 			function (callback) {
 				let query = {};
-				if (role_group == "admin") {
+				if (userLogin.role_group.indexOf('admin') > 0) {
 					query = {
 						_id : {
 							$nin : ['root','dinas','admin']
@@ -131,6 +133,7 @@ function UserHandler () {
 			if (err) return next("ERROR");
 			const elmSelect = req.generate.elementOption(results[0], { name : '_id'});
 			const elmBank = req.getArray.CreateElementSelect(results[1] , "tambah" , "nama");
+			
 			var obj = [{
 				id : 'name',
 				label : 'Nama',
